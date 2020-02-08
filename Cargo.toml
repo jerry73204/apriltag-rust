@@ -1,8 +1,14 @@
 [package]
 name = "apriltag-sys"
 version = "0.1.0"
+description = "Rust bindings for AprilTag library"
 authors = ["jerry73204 <jerry73204@gmail.com>"]
 edition = "2018"
+license = "BSD-2-Clause"
+documentation = "https://docs.rs/apriltag-sys"
+homepage = "https://github.com/jerry73204/apriltag-sys"
+repository = "https://github.com/jerry73204/apriltag-sys.git"
+readme = "README.md"
 
 [dependencies]
 
