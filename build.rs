@@ -8,6 +8,16 @@ fn main() {
     let bindings = bindgen::Builder::default()
         .header("wrapper.h")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .whitelist_type("apriltag_.*")
+        .whitelist_function("apriltag_.*")
+        .whitelist_function("tag16h5_.*")
+        .whitelist_function("tag25h9_.*")
+        .whitelist_function("tag36h11_.*")
+        .whitelist_function("tagCircle21h7_.*")
+        .whitelist_function("tagCircle49h12_.*")
+        .whitelist_function("tagCustom48h12_.*")
+        .whitelist_function("tagStandard41h12_.*")
+        .whitelist_function("tagStandard52h13_.*")
         .generate()
         .expect("Unable to generate bindings");
 
