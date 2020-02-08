@@ -1,0 +1,7 @@
+# cargo
+/target
+
+# editor
+*~
+.*~
+*.swp
