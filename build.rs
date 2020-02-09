@@ -9,6 +9,9 @@ fn main() {
         .header("wrapper.h")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .whitelist_type("apriltag_.*")
+        .whitelist_type("image_u8_.*")
+        .whitelist_type("image_u8x3_.*")
+        .whitelist_type("image_u8x4_.*")
         .whitelist_function("apriltag_.*")
         .whitelist_function("tag16h5_.*")
         .whitelist_function("tag25h9_.*")
@@ -18,6 +21,9 @@ fn main() {
         .whitelist_function("tagCustom48h12_.*")
         .whitelist_function("tagStandard41h12_.*")
         .whitelist_function("tagStandard52h13_.*")
+        .whitelist_function("image_u8_.*")
+        .whitelist_function("image_u8x3_.*")
+        .whitelist_function("image_u8x4_.*")
         .generate()
         .expect("Unable to generate bindings");
 
