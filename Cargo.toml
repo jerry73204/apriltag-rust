@@ -1,0 +1,15 @@
+[package]
+name = "apriltag"
+version = "0.1.0"
+authors = ["jerry73204 <jerry73204@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+apriltag-sys = { version = "^0.1.1", path = "apriltag-sys" }
+libc = "^0.2.66"
+image = { version = "^0.23.0", optional = true }
+nalgebra = { version = "^0.19.0", optional = true }
+
+[features]
+with-image = ["image"]
+with-nalgebra = ["nalgebra"]
