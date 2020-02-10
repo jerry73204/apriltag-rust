@@ -1,9 +1,10 @@
 #![feature(hash_set_entry)]
 
-pub mod base;
+pub mod detector;
 pub mod families;
 pub mod image_buf;
+mod zarray;
 
-pub use base::AprilTagDetector;
-pub use families::AprilTagFamily;
+pub use detector::Detector;
+pub use families::Family;
 pub use image_buf::Image;

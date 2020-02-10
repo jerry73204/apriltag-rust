@@ -6,11 +6,11 @@ use std::ptr::NonNull;
 use std::{ffi::c_void, fmt::Debug, hash::Hash};
 
 #[derive(Debug, Hash, Eq, PartialEq)]
-pub struct AprilTagFamily {
+pub struct Family {
     pub(crate) ptr: NonNull<apriltag_family_t>,
 }
 
-impl AprilTagFamily {
+impl Family {
     pub fn tag_16h5() -> Self {
         let ptr = unsafe { tag16h5_create() };
         Self {
@@ -68,7 +68,7 @@ impl AprilTagFamily {
     }
 }
 
-impl Drop for AprilTagFamily {
+impl Drop for Family {
     fn drop(&mut self) {
         unsafe {
             let ptr = self.ptr.as_ptr();
