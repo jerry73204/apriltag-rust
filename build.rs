@@ -73,9 +73,9 @@ fn main() {
         bindings
             .write_to_file(bindings_path)
             .expect("Couldn't write bindings!");
-
-        println!("cargo:rustc-link-lib=apriltag");
     }
+
+    println!("cargo:rustc-link-lib=apriltag");
 }
 
 #[cfg(feature = "buildtime-bindgen")]
