@@ -14,11 +14,18 @@ readme = "README.md"
 
 [build-dependencies]
 bindgen = { version = "^0.53.1", optional = true }
-cc = { version = "^1.0.50", features = ["parallel"], optional = true }
-cmake = { version  = "^0.1.42", optional = true }
-pkg-config = { version = "^0.3.17", optional = true }
+cc = { version = "^1.0.50", features = ["parallel"]}
+glob = "^0.3"
+cmake = "^0.1.42"
+pkg-config = "^0.3.17"
 lazy_static = "^1.4.0"
 
 [features]
 default = []
-buildtime-bindgen = ["bindgen", "cc", "cmake", "pkg-config"]
+buildtime-bindgen = ["bindgen"]
+
+# The source location and build method (cmake, direct cc, link system library)
+# is selected by environment variable. Cargo features are not used because these
+# are additive and can set by the package(s) that depend on apriltag-sys. (By
+# this same logic, we should remove buildtime-bindgen feature and make it an
+# environment variable.)
