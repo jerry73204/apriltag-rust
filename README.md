@@ -10,7 +10,7 @@ Import `apriltag-sys` dependency in your `Cargo.toml`
 
 ```toml
 [dependencies]
-apriltag-sys = "^0.1.0"
+apriltag-sys = "^0.1.2"
 ```
 
 ## License
