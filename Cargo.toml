@@ -13,4 +13,12 @@ readme = "README.md"
 [dependencies]
 
 [build-dependencies]
-bindgen = "^0.53.1"
+bindgen = { version = "^0.53.1", optional = true }
+cc = { version = "^1.0.50", features = ["parallel"], optional = true }
+cmake = { version  = "^0.1.42", optional = true }
+pkg-config = { version = "^0.3.17", optional = true }
+lazy_static = "^1.4.0"
+
+[features]
+default = []
+buildtime-bindgen = ["bindgen", "cc", "cmake", "pkg-config"]
