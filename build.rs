@@ -42,7 +42,7 @@ fn get_source_method() -> SrcMethod {
             SrcMethod::Cmake(path.into())
         } else {
             // Default if APRILTAG_SRC is set
-            SrcMethod::Cmake(src.into())
+            SrcMethod::RawStatic(src.into())
         }
     }
 }
