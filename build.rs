@@ -23,26 +23,32 @@ enum SrcMethod {
 }
 
 fn get_source_method() -> SrcMethod {
-    let src: Option<_> = std::env::var_os("APRILTAG_SRC");
-    let src: Option<String> = src.map(|s| s.into_string().unwrap());
+    let src = std::env::var_os("APRILTAG_SRC");
+    let method: Option<String> = std::env::var_os("APRILTAG_SYS_METHOD").map(|s| {
+        s.into_string()
+            .expect("If set, APRILTAG_SYS_METHOD environment variable must be UTF-8 string.")
+    });
 
-    if src.as_ref().filter(|s| s.len() > 0).is_none() {
-        // APRILTAG_SRC was not set or was empty string.
-        SrcMethod::PkgConfig
-    } else {
-        let src = src.unwrap(); // Above check says this won't fail.
+    let method: String = match method {
+        None => "pkg-config".to_string(), // This is the default.
+        Some(s) => s,
+    };
 
-        if src.starts_with("RAW=") {
-            // If APRILTAG_SRC is "RAW=<path>"
-            let path = &src[4..];
-            SrcMethod::RawStatic(path.into())
-        } else if src.starts_with("CMAKE=") {
-            // If APRILTAG_SRC is "CMAKE=<path>"
-            let path = &src[5..];
-            SrcMethod::Cmake(path.into())
-        } else {
-            // Default if APRILTAG_SRC is set
-            SrcMethod::RawStatic(src.into())
+    match method.as_str() {
+        "pkg-config" => SrcMethod::PkgConfig,
+        "raw,static" => SrcMethod::RawStatic(
+            src.expect("APRILTAG_SRC environment variable must be set")
+                .into(),
+        ),
+        "cmake,dynamic" => SrcMethod::Cmake(
+            src.expect("APRILTAG_SRC environment variable must be set")
+                .into(),
+        ),
+        _ => {
+            panic!(
+                "The APRILTAG_SYS_METHOD was not recognized. See README.md of the \
+                apriltag-sys crate for a description of this environment variable."
+            );
         }
     }
 }
@@ -65,6 +71,7 @@ impl From<glob::GlobError> for Error {
 fn main() -> Result<(), Error> {
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-env-changed=APRILTAG_SRC");
+    println!("cargo:rerun-if-env-changed=APRILTAG_SYS_METHOD");
 
     #[allow(unused_variables)]
     let clang_args = match get_source_method() {
