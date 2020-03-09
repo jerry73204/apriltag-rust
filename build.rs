@@ -47,7 +47,7 @@ fn get_source_method() -> SrcMethod {
         _ => {
             panic!(
                 "The APRILTAG_SYS_METHOD was not recognized. See README.md of the \
-                apriltag-sys crate for a description of this environment variable."
+                 apriltag-sys crate for a description of this environment variable."
             );
         }
     }
