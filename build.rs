@@ -73,6 +73,7 @@ fn main() -> Result<(), Error> {
     println!("cargo:rerun-if-env-changed=APRILTAG_SRC");
     println!("cargo:rerun-if-env-changed=APRILTAG_SYS_METHOD");
 
+    // Detect which method to use.
     #[allow(unused_variables)]
     let clang_args = match get_source_method() {
         SrcMethod::Cmake(src_path) => build_cmake(src_path),
@@ -84,6 +85,7 @@ fn main() -> Result<(), Error> {
         }
     };
 
+    // If we need to regenerate the .rs files for bindings, do that, too.
     #[cfg(feature = "buildtime-bindgen")]
     {
         let bindgen_builder = bindgen::Builder::default()
