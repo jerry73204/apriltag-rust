@@ -1,5 +1,11 @@
 # apriltag-sys
 
+[![Crates.io](https://img.shields.io/crates/v/apriltag-sys.svg)](https://crates.io/crates/apriltag-sys)
+[![Documentation](https://docs.rs/apriltag-sys/badge.svg)](https://docs.rs/apriltag-sys/)
+[![Crate License](https://img.shields.io/crates/l/apriltag-sys.svg)](https://crates.io/crates/apriltag-sys)
+[![Dependency status](https://deps.rs/repo/github/jerry73204/apriltag-sys/status.svg)](https://deps.rs/repo/github/jerry73204/apriltag-sys)
+[![build](https://github.com/jerry73204/apriltag-sys/workflows/build/badge.svg?branch=master)](https://github.com/jerry73204/apriltag-sys/actions?query=branch%3Amaster)
+
 This crate provides Rust bindings for AprilTag C library.
 
 ## Usage
