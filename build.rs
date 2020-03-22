@@ -20,30 +20,25 @@ enum SrcMethod {
     Cmake(PathBuf),
     RawStatic(PathBuf),
     PkgConfig,
+    PkgConfigThenStatic(PathBuf),
 }
 
 fn get_source_method() -> SrcMethod {
-    let src = std::env::var_os("APRILTAG_SRC");
-    let method: Option<String> = std::env::var_os("APRILTAG_SYS_METHOD").map(|s| {
-        s.into_string()
-            .expect("If set, APRILTAG_SYS_METHOD environment variable must be UTF-8 string.")
-    });
-
-    let method: String = match method {
-        None => "pkg-config".to_string(), // This is the default.
-        Some(s) => s,
-    };
+    let src = std::env::var_os("APRILTAG_SRC")
+        .map(PathBuf::from)
+        .unwrap_or(PathBuf::from("apriltag-src")); // git submodule checks this out
+    let method: String = std::env::var_os("APRILTAG_SYS_METHOD")
+        .map(|s| {
+            s.into_string()
+                .expect("If set, APRILTAG_SYS_METHOD environment variable must be UTF-8 string.")
+        })
+        .unwrap_or("pkg-config-then-static".to_string()); // This is the default
 
     match method.as_str() {
         "pkg-config" => SrcMethod::PkgConfig,
-        "raw,static" => SrcMethod::RawStatic(
-            src.expect("APRILTAG_SRC environment variable must be set")
-                .into(),
-        ),
-        "cmake,dynamic" => SrcMethod::Cmake(
-            src.expect("APRILTAG_SRC environment variable must be set")
-                .into(),
-        ),
+        "pkg-config-then-static" => SrcMethod::PkgConfigThenStatic(src),
+        "raw,static" => SrcMethod::RawStatic(src),
+        "cmake,dynamic" => SrcMethod::Cmake(src),
         _ => {
             panic!(
                 "The APRILTAG_SYS_METHOD was not recognized. See README.md of the \
@@ -69,6 +64,8 @@ impl From<glob::GlobError> for Error {
 }
 
 fn main() -> Result<(), Error> {
+    use SrcMethod::*;
+
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-env-changed=APRILTAG_SRC");
     println!("cargo:rerun-if-env-changed=APRILTAG_SYS_METHOD");
@@ -76,12 +73,20 @@ fn main() -> Result<(), Error> {
     // Detect which method to use.
     #[allow(unused_variables)]
     let clang_args = match get_source_method() {
-        SrcMethod::Cmake(src_path) => build_cmake(src_path),
-        SrcMethod::RawStatic(sdk_path) => build_raw_static(sdk_path)?,
-        SrcMethod::PkgConfig => {
+        Cmake(src_path) => build_cmake(src_path),
+        RawStatic(sdk_path) => build_raw_static(sdk_path)?,
+        other => {
             // check if apriltag is available on system
-            let _ = pkg_config::probe_library("apriltag").unwrap();
-            vec![]
+            match pkg_config::probe_library("apriltag") {
+                Ok(_) => vec![],
+                Err(e) => {
+                    if let PkgConfigThenStatic(sdk_path) = other {
+                        build_raw_static(sdk_path)?
+                    } else {
+                        panic!("pkg-config failed: {}", e);
+                    }
+                }
+            }
         }
     };
 

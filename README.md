@@ -15,11 +15,13 @@ apriltag-sys = "^0.1.2"
 
 ### Specifying how to compile and link the apriltag C library.
 
-There are currently three options to specify how apriltag-sys will compile and
+There are currently four options to specify how apriltag-sys will compile and
 link the apriltag C library. These are specified by setting the
 `APRILTAG_SYS_METHOD` environment variable to one of the following values:
 
-- `pkg-config` (default) - This will use pkg-config.
+- `pkg-config-then-static` (default) - This will try pkg-config first, then
+   will fallback to `raw,static`.
+- `pkg-config` - This will use pkg-config. Panic upon failure.
 - `raw,static` - The environment variable `APRILTAG_SRC` must be set to a
   directory with the April Tag C library source code. The .c files will be
   compiled by directly calling the C compiler and statically linked.
@@ -27,6 +29,10 @@ link the apriltag C library. These are specified by setting the
   directory with the April Tag C library source code. The cmake command will be
   invoked to call the C compiler and the resulting library will be dynamically
   linked.
+
+The location of the apriltag source is specified by the `APRILTAG_SRC`
+environment variable. If this is not set, a local git submodule checkout of the
+apriltag source will be used.
 
 ## License
 
