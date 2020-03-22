@@ -27,15 +27,12 @@ fn get_source_method() -> SrcMethod {
     let src = std::env::var_os("APRILTAG_SRC")
         .map(PathBuf::from)
         .unwrap_or(PathBuf::from("apriltag-src")); // git submodule checks this out
-    let method: Option<String> = std::env::var_os("APRILTAG_SYS_METHOD").map(|s| {
-        s.into_string()
-            .expect("If set, APRILTAG_SYS_METHOD environment variable must be UTF-8 string.")
-    });
-
-    let method: String = match method {
-        None => "pkg-config-then-static".to_string(), // This is the default.
-        Some(s) => s,
-    };
+    let method: String = std::env::var_os("APRILTAG_SYS_METHOD")
+        .map(|s| {
+            s.into_string()
+                .expect("If set, APRILTAG_SYS_METHOD environment variable must be UTF-8 string.")
+        })
+        .unwrap_or("pkg-config-then-static".to_string()); // This is the default
 
     match method.as_str() {
         "pkg-config" => SrcMethod::PkgConfig,
