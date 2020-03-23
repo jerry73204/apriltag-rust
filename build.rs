@@ -164,6 +164,7 @@ fn build_raw_static(sdk_path: PathBuf) -> Result<Vec<String>, Error> {
     c_files.push("*.c");
     let glob_pattern = c_files.to_str().unwrap();
     let paths = glob::glob_with(glob_pattern, glob::MatchOptions::new())?;
+    let mut count = 0;
     for path in paths {
         let path = path?;
         let path_str = path.display().to_string();
@@ -171,6 +172,13 @@ fn build_raw_static(sdk_path: PathBuf) -> Result<Vec<String>, Error> {
             continue;
         }
         compiler.file(&path);
+        count += 1;
+    }
+    if count == 0 {
+        panic!(
+            "No source files found at {}. Hint: do 'git submodule update --init'.",
+            glob_pattern
+        );
     }
 
     // add files in base/common SDK dir
