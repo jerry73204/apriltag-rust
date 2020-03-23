@@ -41,8 +41,8 @@ fn get_source_method() -> SrcMethod {
         "cmake,dynamic" => SrcMethod::Cmake(src),
         _ => {
             panic!(
-                "The APRILTAG_SYS_METHOD was not recognized. See README.md of the \
-                 apriltag-sys crate for a description of this environment variable."
+                "The APRILTAG_SYS_METHOD value \"{}\" was not recognized. See README.md of the \
+                 apriltag-sys crate for a description of this environment variable.", method
             );
         }
     }
