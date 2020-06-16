@@ -28,7 +28,7 @@ impl Detection {
         unsafe { self.ptr.as_ref().p }
     }
 
-    pub fn homography<H>(&self) -> MatdRef<'_> {
+    pub fn homography(&self) -> MatdRef<'_> {
         unsafe { MatdRef::from_ptr(self.ptr.as_ref().H) }
     }
 
