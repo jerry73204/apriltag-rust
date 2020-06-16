@@ -62,6 +62,12 @@ impl Detector {
         detections
     }
 
+    pub fn set_debug(&mut self, debug: bool) {
+        unsafe {
+            self.ptr.as_mut().debug = debug as c_int;
+        }
+    }
+
     // pub fn add_family_bits(&mut self, family: Family, bits_corrected: usize) -> SavedFamily<'_> {
     //     unsafe {
     //         sys::apriltag_detector_add_family_bits(
