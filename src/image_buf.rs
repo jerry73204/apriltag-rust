@@ -1,19 +1,4 @@
-use apriltag_sys::{
-    image_u8_copy, image_u8_create_alignment, image_u8_create_stride, image_u8_destroy, image_u8_t,
-};
-#[cfg(feature = "with-image")]
-use image::{
-    flat::{FlatSamples, SampleLayout},
-    ColorType, ImageBuffer, Luma, Pixel,
-};
-#[cfg(feature = "with-nalgebra")]
-use nalgebra::{
-    base::{
-        dimension::{Dim, Dynamic},
-        storage::Storage,
-    },
-    Matrix, MatrixMN,
-};
+use apriltag_sys as sys;
 use std::{
     ops::{Deref, Index, IndexMut},
     os::raw::c_uint,
@@ -22,43 +7,17 @@ use std::{
 
 const DEFAULT_ALIGNMENT_U8: usize = 96;
 
-#[derive(Debug, Clone)]
-pub struct SamplesIter<'a> {
-    image: &'a Image,
-    width: usize,
-    height: usize,
-    index: (usize, usize),
-}
-
-impl<'a> Iterator for SamplesIter<'a> {
-    type Item = (usize, usize, u8);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let (x, y) = self.index;
-
-        let (next_x, next_y, value) = if x + 1 < self.width {
-            (x + 1, y, self.image[(x, y)])
-        } else if y + 1 < self.height {
-            (0, y + 1, self.image[(x, y)])
-        } else {
-            return None;
-        };
-
-        self.index = (next_x, next_y);
-        Some((x, y, value))
-    }
-}
-
 #[derive(Debug)]
 pub struct Image {
-    pub(crate) ptr: NonNull<image_u8_t>,
+    pub(crate) ptr: NonNull<sys::image_u8_t>,
 }
 
 impl Image {
     pub fn zeros_stride(width: usize, height: usize, stride: usize) -> Self {
         assert!(width <= stride);
-        let ptr =
-            unsafe { image_u8_create_stride(width as c_uint, height as c_uint, stride as c_uint) };
+        let ptr = unsafe {
+            sys::image_u8_create_stride(width as c_uint, height as c_uint, stride as c_uint)
+        };
         Self {
             ptr: NonNull::new(ptr).unwrap(),
         }
@@ -66,7 +25,7 @@ impl Image {
 
     pub fn zeros_alignment(width: usize, height: usize, alignment: usize) -> Self {
         let ptr = unsafe {
-            image_u8_create_alignment(width as c_uint, height as c_uint, alignment as c_uint)
+            sys::image_u8_create_alignment(width as c_uint, height as c_uint, alignment as c_uint)
         };
         Self {
             ptr: NonNull::new(ptr).unwrap(),
@@ -81,9 +40,7 @@ impl Image {
             index: (0, 0),
         }
     }
-}
 
-impl Image {
     pub fn width(&self) -> usize {
         unsafe { self.ptr.as_ref().width as usize }
     }
@@ -129,7 +86,7 @@ impl AsMut<[u8]> for Image {
 
 impl Clone for Image {
     fn clone(&self) -> Self {
-        let cloned_ptr = unsafe { image_u8_copy(self.ptr.as_ptr()) };
+        let cloned_ptr = unsafe { sys::image_u8_copy(self.ptr.as_ptr()) };
         Self {
             ptr: NonNull::new(cloned_ptr).unwrap(),
         }
@@ -139,188 +96,225 @@ impl Clone for Image {
 impl Drop for Image {
     fn drop(&mut self) {
         unsafe {
-            image_u8_destroy(self.ptr.as_ptr());
+            sys::image_u8_destroy(self.ptr.as_ptr());
         }
     }
 }
 
-#[cfg(feature = "with-nalgebra")]
-impl From<&Image> for MatrixMN<u8, Dynamic, Dynamic> {
-    fn from(from: &Image) -> Self {
-        let width = from.width();
-        let height = from.height();
-        Self::from_fn(height, width, |row, col| from[(col, row)])
-    }
+#[derive(Debug, Clone)]
+pub struct SamplesIter<'a> {
+    image: &'a Image,
+    width: usize,
+    height: usize,
+    index: (usize, usize),
 }
 
-#[cfg(feature = "with-nalgebra")]
-impl From<Image> for MatrixMN<u8, Dynamic, Dynamic> {
-    fn from(from: Image) -> Self {
-        Self::from(&from)
-    }
-}
+impl<'a> Iterator for SamplesIter<'a> {
+    type Item = (usize, usize, u8);
 
-#[cfg(feature = "with-nalgebra")]
-impl<R, C, S> From<&Matrix<u8, R, C, S>> for Image
-where
-    R: Dim,
-    C: Dim,
-    S: Storage<u8, R, C>,
-{
-    fn from(from: &Matrix<u8, R, C, S>) -> Self {
-        let width = from.ncols();
-        let height = from.nrows();
-        let mut to = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8);
+    fn next(&mut self) -> Option<Self::Item> {
+        let (x, y) = self.index;
 
-        from.row_iter()
-            .enumerate()
-            .flat_map(|(row_idx, row)| {
-                row.iter()
-                    .enumerate()
-                    .map(move |(col_idx, value)| (row_idx, col_idx, *value))
-                    .collect::<Vec<_>>()
-            })
-            .for_each(|(row_idx, col_idx, value)| {
-                to[(col_idx, row_idx)] = value;
-            });
-        to
-    }
-}
-
-#[cfg(feature = "with-nalgebra")]
-impl<R, C, S> From<Matrix<u8, R, C, S>> for Image
-where
-    R: Dim,
-    C: Dim,
-    S: Storage<u8, R, C>,
-{
-    fn from(from: Matrix<u8, R, C, S>) -> Self {
-        Self::from(&from)
-    }
-}
-
-#[cfg(feature = "with-image")]
-impl<Buffer> From<&FlatSamples<Buffer>> for Image
-where
-    Buffer: AsRef<[u8]>,
-{
-    fn from(from: &FlatSamples<Buffer>) -> Self {
-        match from.color_hint {
-            Some(ColorType::L8) => (),
-            _ => panic!("color type {:?} is not supported", from.color_hint),
-        }
-
-        let SampleLayout { width, height, .. } = from.layout;
-        let image = Self::zeros_alignment(width as usize, height as usize, DEFAULT_ALIGNMENT_U8);
-        let stride = image.stride();
-
-        let sample_iter = (0..height)
-            .flat_map(|y| (0..width).map(move |x| (x, y)))
-            .map(|(x, y)| *from.get_sample(0, x, y).unwrap());
-        let buffer_index_iter = (0..height)
-            .flat_map(|y| (0..width).map(move |x| (x as usize, y as usize)))
-            .map(|(x, y)| y * stride + x);
-
-        buffer_index_iter
-            .zip(sample_iter)
-            .for_each(|(buffer_index, sample)| unsafe {
-                let buf_ptr: *mut u8 = (*image.ptr.as_ptr()).buf;
-                *(buf_ptr.add(buffer_index as usize)) = sample;
-            });
-
-        image
-    }
-}
-
-#[cfg(feature = "with-image")]
-impl<Buffer> From<FlatSamples<Buffer>> for Image
-where
-    Buffer: AsRef<[u8]>,
-{
-    fn from(from: FlatSamples<Buffer>) -> Self {
-        Image::from(&from)
-    }
-}
-
-#[cfg(feature = "with-image")]
-impl From<&Image> for FlatSamples<Vec<u8>> {
-    fn from(from: &Image) -> Self {
-        let width = from.width();
-        let height = from.height();
-        let stride = from.stride();
-
-        let mut samples = vec![];
-        samples.extend_from_slice(from.as_ref());
-
-        let flat = FlatSamples {
-            samples,
-            layout: SampleLayout {
-                channels: 1,
-                channel_stride: 1,
-                width: width as u32,
-                width_stride: 1,
-                height: height as u32,
-                height_stride: stride,
-            },
-            color_hint: Some(ColorType::L8),
+        let (next_x, next_y, value) = if x + 1 < self.width {
+            (x + 1, y, self.image[(x, y)])
+        } else if y + 1 < self.height {
+            (0, y + 1, self.image[(x, y)])
+        } else {
+            return None;
         };
-        flat
+
+        self.index = (next_x, next_y);
+        Some((x, y, value))
     }
 }
 
-#[cfg(feature = "with-image")]
-impl From<Image> for FlatSamples<Vec<u8>> {
-    fn from(from: Image) -> Self {
-        Self::from(&from)
+#[cfg(feature = "nalgebra")]
+mod nalgebra_conv {
+    use super::*;
+    use nalgebra::{
+        base::{
+            dimension::{Dim, Dynamic},
+            storage::Storage,
+        },
+        Matrix, MatrixMN,
+    };
+
+    impl From<&Image> for MatrixMN<u8, Dynamic, Dynamic> {
+        fn from(from: &Image) -> Self {
+            let width = from.width();
+            let height = from.height();
+            Self::from_fn(height, width, |row, col| from[(col, row)])
+        }
+    }
+
+    impl From<Image> for MatrixMN<u8, Dynamic, Dynamic> {
+        fn from(from: Image) -> Self {
+            Self::from(&from)
+        }
+    }
+
+    impl<R, C, S> From<&Matrix<u8, R, C, S>> for Image
+    where
+        R: Dim,
+        C: Dim,
+        S: Storage<u8, R, C>,
+    {
+        fn from(from: &Matrix<u8, R, C, S>) -> Self {
+            let width = from.ncols();
+            let height = from.nrows();
+            let mut to = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8);
+
+            from.row_iter()
+                .enumerate()
+                .flat_map(|(row_idx, row)| {
+                    row.iter()
+                        .enumerate()
+                        .map(move |(col_idx, value)| (row_idx, col_idx, *value))
+                        .collect::<Vec<_>>()
+                })
+                .for_each(|(row_idx, col_idx, value)| {
+                    to[(col_idx, row_idx)] = value;
+                });
+            to
+        }
+    }
+
+    impl<R, C, S> From<Matrix<u8, R, C, S>> for Image
+    where
+        R: Dim,
+        C: Dim,
+        S: Storage<u8, R, C>,
+    {
+        fn from(from: Matrix<u8, R, C, S>) -> Self {
+            Self::from(&from)
+        }
     }
 }
 
-#[cfg(feature = "with-image")]
-impl<Container> From<&ImageBuffer<Luma<u8>, Container>> for Image
-where
-    Container: Deref<Target = [u8]>,
-{
-    fn from(from: &ImageBuffer<Luma<u8>, Container>) -> Self {
-        let width = from.width() as usize;
-        let height = from.height() as usize;
-        let image = Self::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8);
-        let stride = image.stride();
+#[cfg(feature = "image")]
+mod image_conv {
+    use super::*;
+    use image::{
+        flat::{FlatSamples, SampleLayout},
+        ColorType, ImageBuffer, Luma, Pixel,
+    };
 
-        from.enumerate_pixels().for_each(|(x, y, pixel)| unsafe {
-            let buffer_index = x as usize + y as usize * stride;
-            let buf_ptr: *mut u8 = (*image.ptr.as_ptr()).buf;
-            *(buf_ptr.add(buffer_index as usize)) = pixel.channels()[0];
-        });
+    impl<Buffer> From<&FlatSamples<Buffer>> for Image
+    where
+        Buffer: AsRef<[u8]>,
+    {
+        fn from(from: &FlatSamples<Buffer>) -> Self {
+            match from.color_hint {
+                Some(ColorType::L8) => (),
+                _ => panic!("color type {:?} is not supported", from.color_hint),
+            }
 
-        image
+            let SampleLayout { width, height, .. } = from.layout;
+            let image =
+                Self::zeros_alignment(width as usize, height as usize, DEFAULT_ALIGNMENT_U8);
+            let stride = image.stride();
+
+            let sample_iter = (0..height)
+                .flat_map(|y| (0..width).map(move |x| (x, y)))
+                .map(|(x, y)| *from.get_sample(0, x, y).unwrap());
+            let buffer_index_iter = (0..height)
+                .flat_map(|y| (0..width).map(move |x| (x as usize, y as usize)))
+                .map(|(x, y)| y * stride + x);
+
+            buffer_index_iter
+                .zip(sample_iter)
+                .for_each(|(buffer_index, sample)| unsafe {
+                    let buf_ptr: *mut u8 = (*image.ptr.as_ptr()).buf;
+                    *(buf_ptr.add(buffer_index as usize)) = sample;
+                });
+
+            image
+        }
     }
-}
 
-#[cfg(feature = "with-image")]
-impl<Container> From<ImageBuffer<Luma<u8>, Container>> for Image
-where
-    Container: Deref<Target = [u8]>,
-{
-    fn from(from: ImageBuffer<Luma<u8>, Container>) -> Self {
-        Image::from(&from)
+    impl<Buffer> From<FlatSamples<Buffer>> for Image
+    where
+        Buffer: AsRef<[u8]>,
+    {
+        fn from(from: FlatSamples<Buffer>) -> Self {
+            Image::from(&from)
+        }
     }
-}
 
-#[cfg(feature = "with-image")]
-impl From<&Image> for ImageBuffer<Luma<u8>, Vec<u8>> {
-    fn from(from: &Image) -> Self {
-        let width = from.width();
-        let height = from.height();
-        ImageBuffer::from_fn(width as u32, height as u32, |x, y| {
-            Luma::from([from[(x as usize, y as usize)]])
-        })
+    impl From<&Image> for FlatSamples<Vec<u8>> {
+        fn from(from: &Image) -> Self {
+            let width = from.width();
+            let height = from.height();
+            let stride = from.stride();
+
+            let mut samples = vec![];
+            samples.extend_from_slice(from.as_ref());
+
+            let flat = FlatSamples {
+                samples,
+                layout: SampleLayout {
+                    channels: 1,
+                    channel_stride: 1,
+                    width: width as u32,
+                    width_stride: 1,
+                    height: height as u32,
+                    height_stride: stride,
+                },
+                color_hint: Some(ColorType::L8),
+            };
+            flat
+        }
     }
-}
 
-#[cfg(feature = "with-image")]
-impl From<Image> for ImageBuffer<Luma<u8>, Vec<u8>> {
-    fn from(from: Image) -> Self {
-        Self::from(&from)
+    impl From<Image> for FlatSamples<Vec<u8>> {
+        fn from(from: Image) -> Self {
+            Self::from(&from)
+        }
+    }
+
+    impl<Container> From<&ImageBuffer<Luma<u8>, Container>> for Image
+    where
+        Container: Deref<Target = [u8]>,
+    {
+        fn from(from: &ImageBuffer<Luma<u8>, Container>) -> Self {
+            let width = from.width() as usize;
+            let height = from.height() as usize;
+            let image = Self::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8);
+            let stride = image.stride();
+
+            from.enumerate_pixels().for_each(|(x, y, pixel)| unsafe {
+                let buffer_index = x as usize + y as usize * stride;
+                let buf_ptr: *mut u8 = (*image.ptr.as_ptr()).buf;
+                *(buf_ptr.add(buffer_index as usize)) = pixel.channels()[0];
+            });
+
+            image
+        }
+    }
+
+    impl<Container> From<ImageBuffer<Luma<u8>, Container>> for Image
+    where
+        Container: Deref<Target = [u8]>,
+    {
+        fn from(from: ImageBuffer<Luma<u8>, Container>) -> Self {
+            Image::from(&from)
+        }
+    }
+
+    impl From<&Image> for ImageBuffer<Luma<u8>, Vec<u8>> {
+        fn from(from: &Image) -> Self {
+            let width = from.width();
+            let height = from.height();
+            ImageBuffer::from_fn(width as u32, height as u32, |x, y| {
+                Luma::from([from[(x as usize, y as usize)]])
+            })
+        }
+    }
+
+    impl From<Image> for ImageBuffer<Luma<u8>, Vec<u8>> {
+        fn from(from: Image) -> Self {
+            Self::from(&from)
+        }
     }
 }
 
@@ -328,7 +322,22 @@ impl From<Image> for ImageBuffer<Luma<u8>, Vec<u8>> {
 mod tests {
     use super::*;
 
-    #[cfg(feature = "with-image")]
+    #[cfg(feature = "nalgebra")]
+    use nalgebra::{
+        base::{
+            dimension::{Dim, Dynamic},
+            storage::Storage,
+        },
+        Matrix, MatrixMN,
+    };
+
+    #[cfg(feature = "image")]
+    use image::{
+        flat::{FlatSamples, SampleLayout},
+        ColorType, ImageBuffer, Luma, Pixel,
+    };
+
+    #[cfg(feature = "image")]
     fn diagonal_image(width: usize, height: usize) -> Image {
         let mut image = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8);
         (0..(width.min(height) as usize))
@@ -340,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "with-image")]
+    #[cfg(feature = "image")]
     fn image_clone() {
         let width = 80;
         let height = 60;
@@ -360,7 +369,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "with-image")]
+    #[cfg(feature = "image")]
     fn convert_flat_samples_vs_image() {
         let width = 64;
         let height = 28;
@@ -420,7 +429,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "with-image")]
+    #[cfg(feature = "image")]
     fn convert_image_buffer_vs_image() {
         let width = 120;
         let height = 80;
@@ -456,7 +465,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "with-nalgebra")]
+    #[cfg(feature = "nalgebra")]
     fn convert_matrix_vs_image() {
         use nalgebra::{U40, U80};
         let matrix_from = MatrixMN::<u8, U80, U40>::new_random();

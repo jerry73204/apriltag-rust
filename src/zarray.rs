@@ -1,8 +1,9 @@
-use apriltag_sys::zarray_t;
+use apriltag_sys as sys;
 use std::{
     convert::AsRef,
     ffi::c_void,
     marker::PhantomData,
+    mem,
     ops::{Index, IndexMut},
     os::raw::c_char,
     ptr::NonNull,
@@ -31,15 +32,15 @@ impl<'a, T> Iterator for ZarrayIter<'a, T> {
 
 #[derive(Debug)]
 pub struct Zarray<T> {
-    ptr: NonNull<zarray_t>,
-    phantom: PhantomData<T>,
+    ptr: NonNull<sys::zarray_t>,
+    _phantom: PhantomData<T>,
 }
 
 impl<T> Zarray<T> {
     pub fn _new() -> Self {
         let ptr = unsafe {
-            let ptr = libc::calloc(1, std::mem::size_of::<zarray_t>()) as *mut zarray_t;
-            *ptr.as_mut().unwrap() = zarray_t {
+            let ptr = libc::calloc(1, mem::size_of::<sys::zarray_t>()) as *mut sys::zarray_t;
+            *ptr.as_mut().unwrap() = sys::zarray_t {
                 el_sz: std::mem::size_of::<T>() as u64,
                 size: 0,
                 alloc: 0,
@@ -49,7 +50,7 @@ impl<T> Zarray<T> {
         };
         Self {
             ptr: NonNull::new(ptr).unwrap(),
-            phantom: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
@@ -65,10 +66,10 @@ impl<T> Zarray<T> {
         }
     }
 
-    pub unsafe fn from_ptr(ptr: NonNull<zarray_t>) -> Self {
+    pub unsafe fn from_ptr(ptr: NonNull<sys::zarray_t>) -> Self {
         Self {
             ptr,
-            phantom: PhantomData,
+            _phantom: PhantomData,
         }
     }
 }
@@ -109,9 +110,9 @@ impl<T> Clone for Zarray<T> {
     fn clone(&self) -> Self {
         let ptr = unsafe {
             let from_ptr = self.ptr.as_ptr();
-            let to_ptr = libc::calloc(1, std::mem::size_of::<zarray_t>()) as *mut zarray_t;
+            let to_ptr = libc::calloc(1, mem::size_of::<sys::zarray_t>()) as *mut sys::zarray_t;
 
-            let zarray_t {
+            let sys::zarray_t {
                 el_sz,
                 size,
                 alloc,
@@ -127,7 +128,7 @@ impl<T> Clone for Zarray<T> {
                 size as usize * el_sz as usize,
             );
 
-            *to_ptr.as_mut().unwrap() = zarray_t {
+            *to_ptr.as_mut().unwrap() = sys::zarray_t {
                 el_sz,
                 size,
                 alloc,
@@ -138,7 +139,7 @@ impl<T> Clone for Zarray<T> {
 
         Self {
             ptr: NonNull::new(ptr).unwrap(),
-            phantom: PhantomData,
+            _phantom: PhantomData,
         }
     }
 }
