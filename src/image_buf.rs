@@ -13,14 +13,18 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn zeros_stride(width: usize, height: usize, stride: usize) -> Self {
-        assert!(width <= stride);
+    pub fn zeros_stride(width: usize, height: usize, stride: usize) -> Option<Self> {
+        if width > stride {
+            return None;
+        }
+
         let ptr = unsafe {
             sys::image_u8_create_stride(width as c_uint, height as c_uint, stride as c_uint)
         };
-        Self {
+
+        Some(Self {
             ptr: NonNull::new(ptr).unwrap(),
-        }
+        })
     }
 
     pub fn zeros_alignment(width: usize, height: usize, alignment: usize) -> Self {
@@ -287,7 +291,6 @@ mod image_conv {
                 let buf_ptr: *mut u8 = (*image.ptr.as_ptr()).buf;
                 *(buf_ptr.add(buffer_index as usize)) = pixel.channels()[0];
             });
-
             image
         }
     }
