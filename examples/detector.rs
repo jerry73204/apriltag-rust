@@ -24,7 +24,7 @@ mod simple_detector {
         }
 
         let mut detector = DetectorBuilder::new()
-            .add_family_bits(Family::tag_standard_52h13(), 1)
+            .add_family_bits(Family::tag_16h5(), 1)
             .build()
             .unwrap();
 
@@ -36,14 +36,13 @@ mod simple_detector {
 
             detections.into_iter().enumerate().for_each(|(index, det)| {
                 println!(
-                    "- detection {}\
-                     id\t{}\
-                     hamming\t{}\
-                     decision_margin\t{}\
-                     center\t{:?}\
-                     corners\t{:?}\
-                     homography\t{:?}\
-
+                    "- detection {}\n\
+                     id: {}\n\
+                     hamming: {}\n\
+                     decision_margin: {}\n\
+                     center: {:?}\n\
+                     corners: {:?}\n\
+                     homography: {:?}\n\
                      ",
                     index,
                     det.id(),
