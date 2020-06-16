@@ -1,6 +1,6 @@
 use crate::{detection::Detection, families::Family, image_buf::Image, zarray::Zarray};
 use apriltag_sys as sys;
-use std::{os::raw::c_int, ptr::NonNull};
+use std::{mem, os::raw::c_int, ptr::NonNull};
 
 #[derive(Debug)]
 pub struct DetectorBuilder {
@@ -50,6 +50,7 @@ impl Detector {
         let image: Image = image.into();
         let detections = unsafe {
             let ptr = sys::apriltag_detector_detect(self.ptr.as_ptr(), image.ptr.as_ptr());
+            mem::drop(image);
             let zarray = Zarray::<*mut sys::apriltag_detection_t>::from_raw(ptr);
             let detections = zarray
                 .iter()

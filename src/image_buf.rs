@@ -3,6 +3,7 @@ use std::{
     ops::{Deref, Index, IndexMut},
     os::raw::c_uint,
     ptr::NonNull,
+    slice,
 };
 
 const DEFAULT_ALIGNMENT_U8: usize = 96;
@@ -76,15 +77,13 @@ impl IndexMut<(usize, usize)> for Image {
 
 impl AsRef<[u8]> for Image {
     fn as_ref(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.ptr.as_ref().buf, self.stride() * self.height()) }
+        unsafe { slice::from_raw_parts(self.ptr.as_ref().buf, self.stride() * self.height()) }
     }
 }
 
 impl AsMut<[u8]> for Image {
     fn as_mut(&mut self) -> &mut [u8] {
-        unsafe {
-            std::slice::from_raw_parts_mut(self.ptr.as_ref().buf, self.stride() * self.height())
-        }
+        unsafe { slice::from_raw_parts_mut(self.ptr.as_ref().buf, self.stride() * self.height()) }
     }
 }
 
@@ -227,9 +226,8 @@ mod image_conv {
 
             buffer_index_iter
                 .zip(sample_iter)
-                .for_each(|(buffer_index, sample)| unsafe {
-                    let buf_ptr: *mut u8 = (*image.ptr.as_ptr()).buf;
-                    *(buf_ptr.add(buffer_index as usize)) = sample;
+                .for_each(|(buffer_index, sample)| {
+                    image.as_mut()[buffer_index] = sample;
                 });
 
             image
@@ -283,13 +281,11 @@ mod image_conv {
         fn from(from: &ImageBuffer<Luma<u8>, Container>) -> Self {
             let width = from.width() as usize;
             let height = from.height() as usize;
-            let image = Self::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8);
-            let stride = image.stride();
+            let mut image = Self::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
 
-            from.enumerate_pixels().for_each(|(x, y, pixel)| unsafe {
-                let buffer_index = x as usize + y as usize * stride;
-                let buf_ptr: *mut u8 = (*image.ptr.as_ptr()).buf;
-                *(buf_ptr.add(buffer_index as usize)) = pixel.channels()[0];
+            from.enumerate_pixels().for_each(|(x, y, pixel)| {
+                let component = pixel.channels()[0];
+                image[(x as usize, y as usize)] = component;
             });
             image
         }
