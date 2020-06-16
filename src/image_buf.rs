@@ -28,13 +28,18 @@ impl Image {
         })
     }
 
-    pub fn zeros_alignment(width: usize, height: usize, alignment: usize) -> Self {
+    pub fn zeros_alignment(width: usize, height: usize, alignment: usize) -> Option<Self> {
+        if alignment == 0 {
+            return None;
+        }
+
         let ptr = unsafe {
             sys::image_u8_create_alignment(width as c_uint, height as c_uint, alignment as c_uint)
         };
-        Self {
+
+        Some(Self {
             ptr: NonNull::new(ptr).unwrap(),
-        }
+        })
     }
 
     pub fn samples_iter<'a>(&'a self) -> SamplesIter<'a> {
@@ -213,8 +218,9 @@ mod image_conv {
             }
 
             let SampleLayout { width, height, .. } = from.layout;
-            let image =
-                Self::zeros_alignment(width as usize, height as usize, DEFAULT_ALIGNMENT_U8);
+            let mut image =
+                Self::zeros_alignment(width as usize, height as usize, DEFAULT_ALIGNMENT_U8)
+                    .unwrap();
             let stride = image.stride();
 
             let sample_iter = (0..height)
