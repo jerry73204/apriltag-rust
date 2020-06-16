@@ -1,5 +1,5 @@
 use apriltag_sys as sys;
-use std::{ffi::c_void, fmt::Debug, hash::Hash, ptr::NonNull};
+use std::{ffi::c_void, fmt::Debug, hash::Hash, mem::ManuallyDrop, ptr::NonNull};
 
 #[derive(Debug, Hash, Eq, PartialEq)]
 pub struct Family {
@@ -63,9 +63,9 @@ impl Family {
         }
     }
 
-    // pub(crate) unsafe fn into_raw(self) -> NonNull<sys::apriltag_family_t> {
-    //     ManuallyDrop::new(self).ptr
-    // }
+    pub(crate) unsafe fn into_raw(self) -> NonNull<sys::apriltag_family_t> {
+        ManuallyDrop::new(self).ptr
+    }
 
     // pub(crate) unsafe fn from_raw(ptr: *mut sys::apriltag_family_t) -> Self {
     //     Self {

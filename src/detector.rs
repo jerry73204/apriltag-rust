@@ -22,18 +22,19 @@ impl DetectorBuilder {
             return None;
         }
 
-        let ptr = unsafe { NonNull::new(sys::apriltag_detector_create()).unwrap() };
+        let detector_ptr = unsafe { NonNull::new(sys::apriltag_detector_create()).unwrap() };
         for (family, bits_corrected) in self.families.into_iter() {
             unsafe {
+                let family_ptr = family.into_raw();
                 sys::apriltag_detector_add_family_bits(
-                    ptr.as_ptr(),
-                    family.ptr.as_ptr(),
+                    detector_ptr.as_ptr(),
+                    family_ptr.as_ptr(),
                     bits_corrected as c_int,
                 );
             }
         }
 
-        Some(Detector { ptr })
+        Some(Detector { ptr: detector_ptr })
     }
 }
 
