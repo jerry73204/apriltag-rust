@@ -7,28 +7,8 @@ use std::{
     ops::{Index, IndexMut},
     os::raw::c_char,
     ptr::NonNull,
+    slice,
 };
-
-#[derive(Debug, Clone)]
-pub struct ZarrayIter<'a, T> {
-    zarray: &'a Zarray<T>,
-    len: usize,
-    index: usize,
-}
-
-impl<'a, T> Iterator for ZarrayIter<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.len {
-            let index = self.index;
-            self.index += 1;
-            Some(&self.zarray[index])
-        } else {
-            None
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct Zarray<T> {
@@ -37,23 +17,6 @@ pub struct Zarray<T> {
 }
 
 impl<T> Zarray<T> {
-    pub fn _new() -> Self {
-        let ptr = unsafe {
-            let ptr = libc::calloc(1, mem::size_of::<sys::zarray_t>()) as *mut sys::zarray_t;
-            *ptr.as_mut().unwrap() = sys::zarray_t {
-                el_sz: std::mem::size_of::<T>() as u64,
-                size: 0,
-                alloc: 0,
-                data: std::ptr::null_mut(),
-            };
-            ptr
-        };
-        Self {
-            ptr: NonNull::new(ptr).unwrap(),
-            _phantom: PhantomData,
-        }
-    }
-
     pub fn len(&self) -> usize {
         unsafe { self.ptr.as_ref().size as usize }
     }
@@ -66,7 +29,13 @@ impl<T> Zarray<T> {
         }
     }
 
-    pub unsafe fn from_ptr(ptr: NonNull<sys::zarray_t>) -> Self {
+    pub(crate) unsafe fn from_raw(ptr: *mut sys::zarray_t) -> Self {
+        let ptr = NonNull::new(ptr).expect("please report bug");
+        assert_eq!(
+            ptr.as_ref().el_sz as usize,
+            mem::size_of::<T>(),
+            "please report bug"
+        );
         Self {
             ptr,
             _phantom: PhantomData,
@@ -78,7 +47,7 @@ impl<T> AsRef<[T]> for Zarray<T> {
     fn as_ref(&self) -> &[T] {
         unsafe {
             let as_ref = self.ptr.as_ref();
-            std::slice::from_raw_parts(as_ref.data as *const T, as_ref.size as usize)
+            slice::from_raw_parts(as_ref.data as *const T, as_ref.size as usize)
         }
     }
 }
@@ -87,7 +56,7 @@ impl<T> AsMut<[T]> for Zarray<T> {
     fn as_mut(&mut self) -> &mut [T] {
         unsafe {
             let as_mut = self.ptr.as_mut();
-            std::slice::from_raw_parts_mut(as_mut.data as *mut T, as_mut.size as usize)
+            slice::from_raw_parts_mut(as_mut.data as *mut T, as_mut.size as usize)
         }
     }
 }
@@ -119,7 +88,7 @@ impl<T> Clone for Zarray<T> {
                 data: from_data,
             } = *from_ptr;
             assert!(size <= alloc);
-            assert_eq!(el_sz as usize, std::mem::size_of::<T>());
+            assert_eq!(el_sz as usize, mem::size_of::<T>());
 
             let to_data = libc::malloc(alloc as usize * el_sz as usize);
             libc::memcpy(
@@ -152,6 +121,27 @@ impl<T> Drop for Zarray<T> {
                 libc::free(data_ptr as *mut c_void);
             }
             libc::free(self.ptr.as_ptr() as *mut c_void);
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ZarrayIter<'a, T> {
+    zarray: &'a Zarray<T>,
+    len: usize,
+    index: usize,
+}
+
+impl<'a, T> Iterator for ZarrayIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.len {
+            let index = self.index;
+            self.index += 1;
+            Some(&self.zarray[index])
+        } else {
+            None
         }
     }
 }

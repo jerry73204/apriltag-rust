@@ -1,5 +1,4 @@
 use apriltag_sys as sys;
-use std::{collections::HashSet, convert::TryFrom, os::raw::c_int, ptr::NonNull};
 
 #[derive(Debug)]
 pub struct MatdRef<'a> {
@@ -31,10 +30,7 @@ impl<'a> MatdRef<'a> {
 #[cfg(feature = "nalgebra")]
 mod nalgebra_conv {
     use super::*;
-    use nalgebra::{
-        base::dimension::{Dynamic, U1},
-        DMatrixSlice,
-    };
+    use nalgebra::{base::dimension::Dynamic, DMatrixSlice};
 
     impl<'a> From<MatdRef<'a>> for DMatrixSlice<'a, f64, Dynamic, Dynamic> {
         fn from(from: MatdRef<'a>) -> Self {

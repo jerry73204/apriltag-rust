@@ -323,18 +323,12 @@ mod tests {
     use super::*;
 
     #[cfg(feature = "nalgebra")]
-    use nalgebra::{
-        base::{
-            dimension::{Dim, Dynamic},
-            storage::Storage,
-        },
-        Matrix, MatrixMN,
-    };
+    use nalgebra::MatrixMN;
 
     #[cfg(feature = "image")]
     use image::{
         flat::{FlatSamples, SampleLayout},
-        ColorType, ImageBuffer, Luma, Pixel,
+        ColorType, ImageBuffer, Luma,
     };
 
     #[cfg(feature = "image")]

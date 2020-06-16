@@ -1,8 +1,5 @@
-use crate::detector::Detector;
 use apriltag_sys as sys;
-use std::{
-    ffi::c_void, fmt::Debug, hash::Hash, marker::PhantomData, mem::ManuallyDrop, ptr::NonNull,
-};
+use std::{ffi::c_void, fmt::Debug, hash::Hash, ptr::NonNull};
 
 #[derive(Debug, Hash, Eq, PartialEq)]
 pub struct Family {
@@ -66,10 +63,9 @@ impl Family {
         }
     }
 
-    pub(crate) unsafe fn into_raw(self) -> *mut sys::apriltag_family_t {
-        let ptr = ManuallyDrop::new(self).ptr;
-        ptr.as_ptr()
-    }
+    // pub(crate) unsafe fn into_raw(self) -> NonNull<sys::apriltag_family_t> {
+    //     ManuallyDrop::new(self).ptr
+    // }
 
     // pub(crate) unsafe fn from_raw(ptr: *mut sys::apriltag_family_t) -> Self {
     //     Self {
@@ -88,23 +84,5 @@ impl Drop for Family {
             libc::free((*ptr).name as *mut c_void);
             libc::free(ptr as *mut c_void);
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct SavedFamily<'a> {
-    pub(crate) detector: &'a Detector,
-    pub(crate) ptr: *mut sys::apriltag_family_t,
-}
-
-impl<'a> SavedFamily<'a> {
-    pub(crate) unsafe fn new(detector: &'a Detector, family: Family) -> Self {
-        let ptr = family.into_raw();
-        Self { detector, ptr }
-    }
-
-    pub(crate) fn into_raw(self) -> (&'a Detector, *mut sys::apriltag_family_t) {
-        let Self { detector, ptr } = self;
-        (detector, ptr)
     }
 }
