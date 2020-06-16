@@ -17,7 +17,11 @@ impl DetectorBuilder {
         self
     }
 
-    pub fn build(self) -> Detector {
+    pub fn build(self) -> Option<Detector> {
+        if self.families.is_empty() {
+            return None;
+        }
+
         let ptr = unsafe { NonNull::new(sys::apriltag_detector_create()).unwrap() };
         for (family, bits_corrected) in self.families.into_iter() {
             unsafe {
@@ -28,7 +32,8 @@ impl DetectorBuilder {
                 );
             }
         }
-        Detector { ptr }
+
+        Some(Detector { ptr })
     }
 }
 
