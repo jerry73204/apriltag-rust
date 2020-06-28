@@ -1,4 +1,3 @@
-#![feature(hash_set_entry)]
 
 pub mod detection;
 pub mod detector;

@@ -68,35 +68,6 @@ impl Detector {
             self.ptr.as_mut().debug = debug as c_int;
         }
     }
-
-    // pub fn add_family_bits(&mut self, family: Family, bits_corrected: usize) -> SavedFamily<'_> {
-    //     unsafe {
-    //         sys::apriltag_detector_add_family_bits(
-    //             self.ptr.as_ptr(),
-    //             family.ptr.as_ptr(),
-    //             bits_corrected as c_int,
-    //         );
-    //         SavedFamily::new(self, family)
-    //     }
-    // }
-
-    // pub fn remove_family(&mut self, family: SavedFamily<'_>) {
-    //     let (detector_ptr, family_ptr) = family.into_raw();
-    //     assert_eq!(
-    //         self.ptr, detector_ptr,
-    //         "cannot remove a family added to another detector"
-    //     );
-
-    //     unsafe {
-    //         sys::apriltag_detector_remove_family(self.ptr.as_ptr(), family_ptr.as_ptr());
-    //     }
-    // }
-
-    // pub fn clear_families(&mut self) {
-    //     unsafe {
-    //         sys::apriltag_detector_clear_families(self.ptr.as_ptr());
-    //     }
-    // }
 }
 
 impl Drop for Detector {
