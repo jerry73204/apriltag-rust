@@ -1,19 +1,27 @@
+//! The matrix type.
+
 use apriltag_sys as sys;
 
+/// The wrapper type of a matrix reference.
 #[derive(Debug)]
 pub struct MatdRef<'a> {
     ref_: &'a sys::matd_t,
 }
 
 impl<'a> MatdRef<'a> {
+    /// Get number of rows.
     pub fn nrows(&self) -> usize {
         self.ref_.nrows as usize
     }
 
+    /// Get number of columns.
     pub fn ncols(&self) -> usize {
         self.ref_.ncols as usize
     }
 
+    /// Get the reference to the matrix data.
+    ///
+    /// The values are in row-major order.
     pub fn data(&self) -> &'a [f64] {
         let len = self.nrows() * self.ncols();
         let data = unsafe { self.ref_.data.as_slice(len) };

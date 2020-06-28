@@ -1,12 +1,20 @@
+//! Dictionary of tag families.
+//!
+//! It provides the dictionary of pre-generated tag families.
+//! The images of pre-generated tags can be found at the official repositoy
+//! [https://github.com/AprilRobotics/apriltag-imgs](https://github.com/AprilRobotics/apriltag-imgs).
+
 use apriltag_sys as sys;
 use std::{ffi::c_void, fmt::Debug, hash::Hash, mem::ManuallyDrop, ptr::NonNull};
 
+/// Represent a family of pre-generated tags.
 #[derive(Debug, Hash, Eq, PartialEq)]
 pub struct Family {
     pub(crate) ptr: NonNull<sys::apriltag_family_t>,
 }
 
 impl Family {
+    /// Create Tag16h5 family.
     pub fn tag_16h5() -> Self {
         let ptr = unsafe { sys::tag16h5_create() };
         Self {
@@ -14,6 +22,7 @@ impl Family {
         }
     }
 
+    /// Create Tag25h9 family.
     pub fn tag_25h9() -> Self {
         let ptr = unsafe { sys::tag25h9_create() };
         Self {
@@ -21,6 +30,7 @@ impl Family {
         }
     }
 
+    /// Create Tag36h11 family.
     pub fn tag_36h11() -> Self {
         let ptr = unsafe { sys::tag36h11_create() };
         Self {
@@ -28,6 +38,7 @@ impl Family {
         }
     }
 
+    /// Create TagCircle21h7 family.
     pub fn tag_circle_21h7() -> Self {
         let ptr = unsafe { sys::tagCircle21h7_create() };
         Self {
@@ -35,6 +46,7 @@ impl Family {
         }
     }
 
+    /// Create TagCircle49h12 family.
     pub fn tag_circle_49h12() -> Self {
         let ptr = unsafe { sys::tagCircle49h12_create() };
         Self {
@@ -42,6 +54,7 @@ impl Family {
         }
     }
 
+    /// Create TagCustom48h12 family.
     pub fn tag_custom_48h12() -> Self {
         let ptr = unsafe { sys::tagCustom48h12_create() };
         Self {
@@ -49,6 +62,7 @@ impl Family {
         }
     }
 
+    /// Create TagStandard41h12 family.
     pub fn tag_standard_41h12() -> Self {
         let ptr = unsafe { sys::tagStandard41h12_create() };
         Self {
@@ -56,6 +70,7 @@ impl Family {
         }
     }
 
+    /// Create TagStandard52h13 family.
     pub fn tag_standard_52h13() -> Self {
         let ptr = unsafe { sys::tagStandard52h13_create() };
         Self {

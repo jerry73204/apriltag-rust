@@ -1,3 +1,10 @@
+//! Image types for AprilTag detection.
+//!
+//! The [Image] type stores the image in single channel byte buffer.
+//! It can be created by [zeros_stride](Image::zeros_stride), [zeros_alignment](Image::zeros_alignment)
+//! or converted from third-party types.
+//! The supported third-party type conversions depend on the feature flags.
+
 use apriltag_sys as sys;
 use std::{
     ops::{Deref, Index, IndexMut},
@@ -8,12 +15,16 @@ use std::{
 
 const DEFAULT_ALIGNMENT_U8: usize = 96;
 
+/// The single-channel image with pixels in bytes.
 #[derive(Debug)]
 pub struct Image {
     pub(crate) ptr: NonNull<sys::image_u8_t>,
 }
 
 impl Image {
+    /// Create an [Image] with zeros.
+    ///
+    /// The `stride` must be more than or equal to `width`. Otherwise it returns `None`.
     pub fn zeros_stride(width: usize, height: usize, stride: usize) -> Option<Self> {
         if width > stride {
             return None;
@@ -28,6 +39,9 @@ impl Image {
         })
     }
 
+    /// Create an [Image] with zeros.
+    ///
+    /// The `alignment` must be non-zero. Otherwise it returns `None`.
     pub fn zeros_alignment(width: usize, height: usize, alignment: usize) -> Option<Self> {
         if alignment == 0 {
             return None;
@@ -42,6 +56,7 @@ impl Image {
         })
     }
 
+    /// Create an iterator that iterates over the pixels in row-major order.
     pub fn samples_iter<'a>(&'a self) -> SamplesIter<'a> {
         SamplesIter {
             image: self,
@@ -51,14 +66,17 @@ impl Image {
         }
     }
 
+    /// Get width.
     pub fn width(&self) -> usize {
         unsafe { self.ptr.as_ref().width as usize }
     }
 
+    /// Get height.
     pub fn height(&self) -> usize {
         unsafe { self.ptr.as_ref().height as usize }
     }
 
+    /// Get stride.
     pub fn stride(&self) -> usize {
         unsafe { self.ptr.as_ref().stride as usize }
     }

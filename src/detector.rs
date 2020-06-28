@@ -1,22 +1,33 @@
+//! AprilTag detector type and its builder.
+
 use crate::{detection::Detection, families::Family, image_buf::Image, zarray::Zarray};
 use apriltag_sys as sys;
 use std::{mem, os::raw::c_int, ptr::NonNull};
 
+/// The detector builder that creates [Detector].
 #[derive(Debug)]
 pub struct DetectorBuilder {
     families: Vec<(Family, usize)>,
 }
 
 impl DetectorBuilder {
+    /// Create a builder instance.
     pub fn new() -> Self {
         Self { families: vec![] }
     }
 
+    /// Append a tag family.
+    ///
+    /// The method must be called at least once.
     pub fn add_family_bits(mut self, family: Family, bits_corrected: usize) -> Self {
         self.families.push((family, bits_corrected));
         self
     }
 
+    /// Create a [Detector] instance.
+    ///
+    /// If [add_family_bits](DetectorBuilder::add_family_bits) is never called.
+    /// it returns `None`.
     pub fn build(self) -> Option<Detector> {
         if self.families.is_empty() {
             return None;
@@ -38,12 +49,14 @@ impl DetectorBuilder {
     }
 }
 
+/// The marker detector.
 #[derive(Debug)]
 pub struct Detector {
     pub(crate) ptr: NonNull<sys::apriltag_detector_t>,
 }
 
 impl Detector {
+    /// Run detection on the input image.
     pub fn detect<M>(&mut self, image: M) -> Vec<Detection>
     where
         M: Into<Image>,
@@ -63,6 +76,9 @@ impl Detector {
         detections
     }
 
+    /// Enable or disable the debugging message.
+    ///
+    /// It is disabled by default.
     pub fn set_debug(&mut self, debug: bool) {
         unsafe {
             self.ptr.as_mut().debug = debug as c_int;
