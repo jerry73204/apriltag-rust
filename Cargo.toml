@@ -3,6 +3,7 @@ name = "apriltag"
 version = "0.1.0"
 authors = ["jerry73204 <jerry73204@gmail.com>"]
 edition = "2018"
+description = "High level Rust bindings to AprilTag library"
 categories = ["computer-vision"]
 documentation = "https://docs.rs/apriltag/"
 repository = "https://github.com/jerry73204/apriltag-rust.git"
