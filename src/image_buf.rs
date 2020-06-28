@@ -170,7 +170,7 @@ mod nalgebra_conv {
         fn from(from: &Matrix<u8, R, C, S>) -> Self {
             let width = from.ncols();
             let height = from.nrows();
-            let mut to = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8);
+            let mut to = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
 
             from.row_iter()
                 .enumerate()
@@ -338,7 +338,7 @@ mod tests {
 
     #[cfg(feature = "image")]
     fn diagonal_image(width: usize, height: usize) -> Image {
-        let mut image = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8);
+        let mut image = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
         (0..(width.min(height) as usize))
             .into_iter()
             .for_each(|index| {
