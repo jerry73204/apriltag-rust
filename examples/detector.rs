@@ -1,10 +1,10 @@
-use failure::Fallible;
+use anyhow::Result;
 
 #[cfg(feature = "image")]
 mod simple_detector {
+    use anyhow::Result;
     use apriltag::{DetectorBuilder, Family};
     use argh::FromArgs;
-    use failure::Fallible;
     use std::path::PathBuf;
 
     #[derive(Debug, Clone, FromArgs)]
@@ -15,7 +15,7 @@ mod simple_detector {
         pub input_files: Vec<PathBuf>,
     }
 
-    pub fn _main() -> Fallible<()> {
+    pub fn _main() -> Result<()> {
         let Args { input_files } = argh::from_env();
 
         if input_files.is_empty() {
@@ -59,11 +59,11 @@ mod simple_detector {
 }
 
 #[cfg(feature = "image")]
-fn main() -> Fallible<()> {
+fn main() -> Result<()> {
     simple_detector::_main()
 }
 
 #[cfg(not(feature = "image"))]
-fn main() -> Fallible<()> {
+fn main() -> Result<()> {
     panic!(r#"please enable the "image" feature to run the example"#);
 }
