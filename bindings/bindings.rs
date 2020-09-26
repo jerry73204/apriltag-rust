@@ -232,6 +232,11 @@ fn bindgen_test_layout_pthread_mutex_t() {
         )
     );
 }
+#[doc = " Defines a matrix structure for holding double-precision values with"]
+#[doc = " data in row-major order (i.e. index = row*ncols + col)."]
+#[doc = ""]
+#[doc = " nrows and ncols are 1-based counts with the exception that a scalar (non-matrix)"]
+#[doc = "   is represented with nrows=0 and/or ncols=0."]
 #[repr(C)]
 #[derive(Debug)]
 pub struct matd_t {
@@ -251,41 +256,20 @@ fn bindgen_test_layout_matd_t() {
         8usize,
         concat!("Alignment of ", stringify!(matd_t))
     );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<matd_t>())).nrows as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(matd_t),
-            "::",
-            stringify!(nrows)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<matd_t>())).ncols as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(matd_t),
-            "::",
-            stringify!(ncols)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<matd_t>())).data as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(matd_t),
-            "::",
-            stringify!(data)
-        )
-    );
 }
 extern "C" {
+    #[doc = " Creates a double matrix with the given number of rows and columns (or a scalar"]
+    #[doc = " in the case where rows=0 and/or cols=0). All data elements will be initialized"]
+    #[doc = " to zero. It is the caller's responsibility to call matd_destroy() on the"]
+    #[doc = " returned matrix."]
     pub fn matd_create(rows: ::std::os::raw::c_int, cols: ::std::os::raw::c_int) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Creates a double matrix with the given number of rows and columns (or a scalar"]
+    #[doc = " in the case where rows=0 and/or cols=0). All data elements will be initialized"]
+    #[doc = " using the supplied array of data, which must contain at least rows*cols elements,"]
+    #[doc = " arranged in row-major order (i.e. index = row*ncols + col). It is the caller's"]
+    #[doc = " responsibility to call matd_destroy() on the returned matrix."]
     pub fn matd_create_data(
         rows: ::std::os::raw::c_int,
         cols: ::std::os::raw::c_int,
@@ -293,6 +277,11 @@ extern "C" {
     ) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Creates a double matrix with the given number of rows and columns (or a scalar"]
+    #[doc = " in the case where rows=0 and/or cols=0). All data elements will be initialized"]
+    #[doc = " using the supplied array of float data, which must contain at least rows*cols elements,"]
+    #[doc = " arranged in row-major order (i.e. index = row*ncols + col). It is the caller's"]
+    #[doc = " responsibility to call matd_destroy() on the returned matrix."]
     pub fn matd_create_dataf(
         rows: ::std::os::raw::c_int,
         cols: ::std::os::raw::c_int,
@@ -300,12 +289,25 @@ extern "C" {
     ) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Creates a square identity matrix with the given number of rows (and"]
+    #[doc = " therefore columns), or a scalar with value 1 in the case where dim=0."]
+    #[doc = " It is the caller's responsibility to call matd_destroy() on the"]
+    #[doc = " returned matrix."]
     pub fn matd_identity(dim: ::std::os::raw::c_int) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Creates a scalar with the supplied value 'v'. It is the caller's responsibility"]
+    #[doc = " to call matd_destroy() on the returned matrix."]
+    #[doc = ""]
+    #[doc = " NOTE: Scalars are different than 1x1 matrices (implementation note:"]
+    #[doc = " they are encoded as 0x0 matrices). For example: for matrices A*B, A"]
+    #[doc = " and B must both have specific dimensions. However, if A is a"]
+    #[doc = " scalar, there are no restrictions on the size of B."]
     pub fn matd_create_scalar(v: f64) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Retrieves the cell value for matrix 'm' at the given zero-based row and column index."]
+    #[doc = " Performs more thorough validation checking than MATD_EL()."]
     pub fn matd_get(
         m: *const matd_t,
         row: ::std::os::raw::c_int,
@@ -313,6 +315,8 @@ extern "C" {
     ) -> f64;
 }
 extern "C" {
+    #[doc = " Assigns the given value to the matrix cell at the given zero-based row and"]
+    #[doc = " column index. Performs more thorough validation checking than MATD_EL()."]
     pub fn matd_put(
         m: *mut matd_t,
         row: ::std::os::raw::c_int,
@@ -321,15 +325,27 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Retrieves the scalar value of the given element ('m' must be a scalar)."]
+    #[doc = " Performs more thorough validation checking than MATD_EL()."]
     pub fn matd_get_scalar(m: *const matd_t) -> f64;
 }
 extern "C" {
+    #[doc = " Assigns the given value to the supplied scalar element ('m' must be a scalar)."]
+    #[doc = " Performs more thorough validation checking than MATD_EL()."]
     pub fn matd_put_scalar(m: *mut matd_t, value: f64);
 }
 extern "C" {
+    #[doc = " Creates an exact copy of the supplied matrix 'm'. It is the caller's"]
+    #[doc = " responsibility to call matd_destroy() on the returned matrix."]
     pub fn matd_copy(m: *const matd_t) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Creates a copy of a subset of the supplied matrix 'a'. The subset will include"]
+    #[doc = " rows 'r0' through 'r1', inclusive ('r1' >= 'r0'), and columns 'c0' through 'c1',"]
+    #[doc = " inclusive ('c1' >= 'c0'). All parameters are zero-based (i.e. matd_select(a, 0, 0, 0, 0)"]
+    #[doc = " will return only the first cell). Cannot be used on scalars or to extend"]
+    #[doc = " beyond the number of rows/columns of 'a'. It is the caller's  responsibility to"]
+    #[doc = " call matd_destroy() on the returned matrix."]
     pub fn matd_select(
         a: *const matd_t,
         r0: ::std::os::raw::c_int,
@@ -339,66 +355,152 @@ extern "C" {
     ) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Prints the supplied matrix 'm' to standard output by applying the supplied"]
+    #[doc = " printf format specifier 'fmt' for each individual element. Each row will"]
+    #[doc = " be printed on a separate newline."]
     pub fn matd_print(m: *const matd_t, fmt: *const ::std::os::raw::c_char);
 }
 extern "C" {
+    #[doc = " Prints the transpose of the supplied matrix 'm' to standard output by applying"]
+    #[doc = " the supplied printf format specifier 'fmt' for each individual element. Each"]
+    #[doc = " row will be printed on a separate newline."]
     pub fn matd_print_transpose(m: *const matd_t, fmt: *const ::std::os::raw::c_char);
 }
 extern "C" {
+    #[doc = " Adds the two supplied matrices together, cell-by-cell, and returns the results"]
+    #[doc = " as a new matrix of the same dimensions. The supplied matrices must have"]
+    #[doc = " identical dimensions.  It is the caller's responsibility to call matd_destroy()"]
+    #[doc = " on the returned matrix."]
     pub fn matd_add(a: *const matd_t, b: *const matd_t) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Adds the values of 'b' to matrix 'a', cell-by-cell, and overwrites the"]
+    #[doc = " contents of 'a' with the results. The supplied matrices must have"]
+    #[doc = " identical dimensions."]
     pub fn matd_add_inplace(a: *mut matd_t, b: *const matd_t);
 }
 extern "C" {
+    #[doc = " Subtracts matrix 'b' from matrix 'a', cell-by-cell, and returns the results"]
+    #[doc = " as a new matrix of the same dimensions. The supplied matrices must have"]
+    #[doc = " identical dimensions.  It is the caller's responsibility to call matd_destroy()"]
+    #[doc = " on the returned matrix."]
     pub fn matd_subtract(a: *const matd_t, b: *const matd_t) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Subtracts the values of 'b' from matrix 'a', cell-by-cell, and overwrites the"]
+    #[doc = " contents of 'a' with the results. The supplied matrices must have"]
+    #[doc = " identical dimensions."]
     pub fn matd_subtract_inplace(a: *mut matd_t, b: *const matd_t);
 }
 extern "C" {
+    #[doc = " Scales all cell values of matrix 'a' by the given scale factor 's' and"]
+    #[doc = " returns the result as a new matrix of the same dimensions. It is the caller's"]
+    #[doc = " responsibility to call matd_destroy() on the returned matrix."]
     pub fn matd_scale(a: *const matd_t, s: f64) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Scales all cell values of matrix 'a' by the given scale factor 's' and"]
+    #[doc = " overwrites the contents of 'a' with the results."]
     pub fn matd_scale_inplace(a: *mut matd_t, s: f64);
 }
 extern "C" {
+    #[doc = " Multiplies the two supplied matrices together (matrix product), and returns the"]
+    #[doc = " results as a new matrix. The supplied matrices must have dimensions such that"]
+    #[doc = " columns(a) = rows(b). The returned matrix will have a row count of rows(a)"]
+    #[doc = " and a column count of columns(b). It is the caller's responsibility to call"]
+    #[doc = " matd_destroy() on the returned matrix."]
     pub fn matd_multiply(a: *const matd_t, b: *const matd_t) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Creates a matrix which is the transpose of the supplied matrix 'a'. It is the"]
+    #[doc = " caller's responsibility to call matd_destroy() on the returned matrix."]
     pub fn matd_transpose(a: *const matd_t) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Calculates the determinant of the supplied matrix 'a'."]
     pub fn matd_det(a: *const matd_t) -> f64;
 }
 extern "C" {
+    #[doc = " Attempts to compute an inverse of the supplied matrix 'a' and return it as"]
+    #[doc = " a new matrix. This is strictly only possible if the determinant of 'a' is"]
+    #[doc = " non-zero (matd_det(a) != 0)."]
+    #[doc = ""]
+    #[doc = " If the determinant is zero, NULL is returned. It is otherwise the"]
+    #[doc = " caller's responsibility to cope with the results caused by poorly"]
+    #[doc = " conditioned matrices. (E.g.., if such a situation is likely to arise, compute"]
+    #[doc = " the pseudo-inverse from the SVD.)"]
     pub fn matd_inverse(a: *const matd_t) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Calculates the magnitude of the supplied matrix 'a'."]
     pub fn matd_vec_mag(a: *const matd_t) -> f64;
 }
 extern "C" {
+    #[doc = " Calculates the magnitude of the distance between the points represented by"]
+    #[doc = " matrices 'a' and 'b'. Both 'a' and 'b' must be vectors and have the same"]
+    #[doc = " dimension (although one may be a row vector and one may be a column vector)."]
     pub fn matd_vec_dist(a: *const matd_t, b: *const matd_t) -> f64;
 }
 extern "C" {
+    #[doc = " Same as matd_vec_dist, but only uses the first 'n' terms to compute distance"]
     pub fn matd_vec_dist_n(a: *const matd_t, b: *const matd_t, n: ::std::os::raw::c_int) -> f64;
 }
 extern "C" {
+    #[doc = " Calculates the dot product of two vectors. Both 'a' and 'b' must be vectors"]
+    #[doc = " and have the same dimension (although one may be a row vector and one may be"]
+    #[doc = " a column vector)."]
     pub fn matd_vec_dot_product(a: *const matd_t, b: *const matd_t) -> f64;
 }
 extern "C" {
+    #[doc = " Calculates the normalization of the supplied vector 'a' (i.e. a unit vector"]
+    #[doc = " of the same dimension and orientation as 'a' with a magnitude of 1) and returns"]
+    #[doc = " it as a new vector. 'a' must be a vector of any dimension and must have a"]
+    #[doc = " non-zero magnitude. It is the caller's responsibility to call matd_destroy()"]
+    #[doc = " on the returned matrix."]
     pub fn matd_vec_normalize(a: *const matd_t) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Calculates the cross product of supplied matrices 'a' and 'b' (i.e. a x b)"]
+    #[doc = " and returns it as a new matrix. Both 'a' and 'b' must be vectors of dimension"]
+    #[doc = " 3, but can be either row or column vectors. It is the caller's responsibility"]
+    #[doc = " to call matd_destroy() on the returned matrix."]
     pub fn matd_crossproduct(a: *const matd_t, b: *const matd_t) -> *mut matd_t;
 }
 extern "C" {
     pub fn matd_err_inf(a: *const matd_t, b: *const matd_t) -> f64;
 }
 extern "C" {
+    #[doc = " Creates a new matrix by applying a series of matrix operations, as expressed"]
+    #[doc = " in 'expr', to the supplied list of matrices. Each matrix to be operated upon"]
+    #[doc = " must be represented in the expression by a separate matrix placeholder, 'M',"]
+    #[doc = " and there must be one matrix supplied as an argument for each matrix"]
+    #[doc = " placeholder in the expression. All rules and caveats of the corresponding"]
+    #[doc = " matrix operations apply to the operated-on matrices. It is the caller's"]
+    #[doc = " responsibility to call matd_destroy() on the returned matrix."]
+    #[doc = ""]
+    #[doc = " Available operators (in order of increasing precedence):"]
+    #[doc = "   M+M   add two matrices together"]
+    #[doc = "   M-M   subtract one matrix from another"]
+    #[doc = "   M*M   multiply two matrices together (matrix product)"]
+    #[doc = "   MM    multiply two matrices together (matrix product)"]
+    #[doc = "   -M    negate a matrix"]
+    #[doc = "   M^-1  take the inverse of a matrix"]
+    #[doc = "   M'    take the transpose of a matrix"]
+    #[doc = ""]
+    #[doc = " Expressions can be combined together and grouped by enclosing them in"]
+    #[doc = " parenthesis, i.e.:"]
+    #[doc = "   -M(M+M+M)-(M*M)^-1"]
+    #[doc = ""]
+    #[doc = " Scalar values can be generated on-the-fly, i.e.:"]
+    #[doc = "   M*2.2  scales M by 2.2"]
+    #[doc = "   -2+M   adds -2 to all elements of M"]
+    #[doc = ""]
+    #[doc = " All whitespace in the expression is ignored."]
     pub fn matd_op(expr: *const ::std::os::raw::c_char, ...) -> *mut matd_t;
 }
 extern "C" {
+    #[doc = " Frees the memory associated with matrix 'm', being the result of an earlier"]
+    #[doc = " call to a matd_*() function, after which 'm' will no longer be usable."]
     pub fn matd_destroy(m: *mut matd_t);
 }
 #[repr(C)]
@@ -452,11 +554,22 @@ fn bindgen_test_layout_matd_svd_t() {
     );
 }
 extern "C" {
+    #[doc = " Compute a complete SVD of a matrix. The SVD exists for all"]
+    #[doc = " matrices. For a matrix MxN, we will have:"]
+    #[doc = ""]
+    #[doc = " A = U*S*V'"]
+    #[doc = ""]
+    #[doc = " where A is MxN, U is MxM (and is an orthonormal basis), S is MxN"]
+    #[doc = " (and is diagonal up to machine precision), and V is NxN (and is an"]
+    #[doc = " orthonormal basis)."]
+    #[doc = ""]
+    #[doc = " The caller is responsible for destroying U, S, and V."]
     pub fn matd_svd(A: *mut matd_t) -> matd_svd_t;
 }
 extern "C" {
     pub fn matd_svd_flags(A: *mut matd_t, flags: ::std::os::raw::c_int) -> matd_svd_t;
 }
+#[doc = ""]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct matd_plu_t {
@@ -1004,6 +1117,7 @@ extern "C" {
 extern "C" {
     pub fn image_u8_rotate(in_: *const image_u8_t, rad: f64, pad: u8) -> *mut image_u8_t;
 }
+#[doc = " Defines a structure which acts as a resize-able array ala Java's ArrayList."]
 pub type zarray_t = zarray;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1067,6 +1181,14 @@ fn bindgen_test_layout_zarray() {
     );
 }
 extern "C" {
+    #[doc = " Calls the supplied function for every element in the array in index order."]
+    #[doc = " HOWEVER values are passed to the function, not pointers to values. In the"]
+    #[doc = " case where the zarray stores object pointers, zarray_vmap allows you to"]
+    #[doc = " pass in the object's destroy function (or free) directly. Can only be used"]
+    #[doc = " with zarray's which contain pointer data. The map function should have the"]
+    #[doc = " following format:"]
+    #[doc = ""]
+    #[doc = " void map_function(element_type *element)"]
     pub fn zarray_vmap(za: *mut zarray_t, f: ::std::option::Option<unsafe extern "C" fn()>);
 }
 #[repr(C)]
@@ -1371,6 +1493,7 @@ pub type apriltag_detector_t = apriltag_detector;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct apriltag_detector {
+    #[doc = ""]
     pub nthreads: ::std::os::raw::c_int,
     pub quad_decimate: f32,
     pub quad_sigma: f32,
@@ -1378,6 +1501,7 @@ pub struct apriltag_detector {
     pub decode_sharpening: f64,
     pub debug: ::std::os::raw::c_int,
     pub qtp: apriltag_quad_thresh_params,
+    #[doc = ""]
     pub tp: *mut timeprofile_t,
     pub nedges: u32,
     pub nsegments: u32,
@@ -1801,6 +1925,55 @@ fn bindgen_test_layout_apriltag_pose_t() {
             stringify!(t)
         )
     );
+}
+extern "C" {
+    #[doc = " Estimate pose of the tag using the homography method described in [1]."]
+    #[doc = " @outparam pose"]
+    pub fn estimate_pose_for_tag_homography(
+        info: *mut apriltag_detection_info_t,
+        pose: *mut apriltag_pose_t,
+    );
+}
+extern "C" {
+    #[doc = " Estimate pose of the tag. This returns one or two possible poses for the"]
+    #[doc = " tag, along with the object-space error of each."]
+    #[doc = ""]
+    #[doc = " This uses the homography method described in [1] for the initial estimate."]
+    #[doc = " Then Orthogonal Iteration [2] is used to refine this estimate. Then [3] is"]
+    #[doc = " used to find a potential second local minima and Orthogonal Iteration is"]
+    #[doc = " used to refine this second estimate."]
+    #[doc = ""]
+    #[doc = " [1]: E. Olson, “Apriltag: A robust and flexible visual fiducial system,” in"]
+    #[doc = "      2011 IEEE International Conference on Robotics and Automation,"]
+    #[doc = "      May 2011, pp. 3400–3407."]
+    #[doc = " [2]: Lu, G. D. Hager and E. Mjolsness, \"Fast and globally convergent pose"]
+    #[doc = "      estimation from video images,\" in IEEE Transactions on Pattern Analysis"]
+    #[doc = "      and Machine Intelligence, vol. 22, no. 6, pp. 610-622, June 2000."]
+    #[doc = "      doi: 10.1109/34.862199"]
+    #[doc = " [3]: Schweighofer and A. Pinz, \"Robust Pose Estimation from a Planar Target,\""]
+    #[doc = "      in IEEE Transactions on Pattern Analysis and Machine Intelligence,"]
+    #[doc = "      vol. 28, no. 12, pp. 2024-2030, Dec. 2006.  doi: 10.1109/TPAMI.2006.252"]
+    #[doc = ""]
+    #[doc = " @outparam err1, pose1, err2, pose2"]
+    pub fn estimate_tag_pose_orthogonal_iteration(
+        info: *mut apriltag_detection_info_t,
+        err1: *mut f64,
+        pose1: *mut apriltag_pose_t,
+        err2: *mut f64,
+        pose2: *mut apriltag_pose_t,
+        nIters: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[doc = " Estimate tag pose."]
+    #[doc = " This method is an easier to use interface to estimate_tag_pose_orthogonal_iteration."]
+    #[doc = ""]
+    #[doc = " @outparam pose"]
+    #[doc = " @return Object-space error of returned pose."]
+    pub fn estimate_tag_pose(
+        info: *mut apriltag_detection_info_t,
+        pose: *mut apriltag_pose_t,
+    ) -> f64;
 }
 extern "C" {
     pub fn tag16h5_create() -> *mut apriltag_family_t;

@@ -104,6 +104,7 @@ fn main() -> Result<(), Error> {
             .whitelist_type("zarray_.*")
             .whitelist_type("matd_.*")
             .whitelist_function("apriltag_.*")
+            .whitelist_function("estimate_.*")
             .whitelist_function("tag16h5_.*")
             .whitelist_function("tag25h9_.*")
             .whitelist_function("tag36h11_.*")
