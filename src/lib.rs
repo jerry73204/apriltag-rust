@@ -12,10 +12,12 @@ pub mod detector;
 pub mod families;
 pub mod image_buf;
 pub mod matd;
+pub mod pose;
 mod zarray;
 
-pub use detection::Detection;
+pub use detection::{Detection, DetectionInfo};
 pub use detector::{Detector, DetectorBuilder};
 pub use families::Family;
 pub use image_buf::Image;
 pub use matd::MatdRef;
+pub use pose::estimate_tag_pose;

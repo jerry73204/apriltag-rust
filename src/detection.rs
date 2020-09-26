@@ -55,3 +55,58 @@ impl Drop for Detection {
         }
     }
 }
+
+/// Represent marker detection info for pose estimation.
+#[repr(transparent)]
+pub struct DetectionInfo {
+    pub(crate) ptr: NonNull<sys::apriltag_detection_info_t>,
+}
+
+impl DetectionInfo {
+    pub fn new(det: &Detection, tagsize: f64, fx: f64, fy: f64, cx: f64, cy: f64) -> Self {
+        Self {
+            ptr: NonNull::new(&mut sys::apriltag_detection_info_t {
+                det: det.ptr.as_ptr(),
+                tagsize,
+                fx,
+                fy,
+                cx,
+                cy,
+            })
+            .unwrap(),
+        }
+    }
+
+    /// Get the underlying detection.
+    pub fn det(&self) -> Detection {
+        unsafe { Detection::from_raw(self.ptr.as_ref().det) }
+    }
+
+    /// Get the marker tagsize.
+    pub fn tagsize(&self) -> f64 {
+        unsafe { self.ptr.as_ref().tagsize }
+    }
+
+    /// Get the camera's focal x length (in pixels).
+    pub fn fx(&self) -> f64 {
+        unsafe { self.ptr.as_ref().fx }
+    }
+    /// Get the camera's focal y length (in pixels).
+    pub fn fy(&self) -> f64 {
+        unsafe { self.ptr.as_ref().fy }
+    }
+    /// Get the camera's center x (in pixels).
+    pub fn cx(&self) -> f64 {
+        unsafe { self.ptr.as_ref().cx }
+    }
+    /// Get the camera's center y (in pixels).
+    pub fn cy(&self) -> f64 {
+        unsafe { self.ptr.as_ref().cy }
+    }
+
+    pub(crate) unsafe fn from_raw(ptr: *mut sys::apriltag_detection_info_t) -> Self {
+        Self {
+            ptr: NonNull::new(ptr).unwrap(),
+        }
+    }
+}
