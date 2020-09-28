@@ -73,22 +73,30 @@ fn main() -> Result<(), Error> {
 
     // Detect which method to use.
     #[allow(unused_variables)]
-    let clang_args = match get_source_method() {
-        Cmake(src_path) => build_cmake(src_path),
-        RawStatic(sdk_path) => build_raw_static(sdk_path)?,
-        other => {
-            // check if apriltag is available on system
-            match pkg_config::probe_library("apriltag") {
-                Ok(_) => vec![],
-                Err(e) => {
-                    if let PkgConfigThenStatic(sdk_path) = other {
-                        build_raw_static(sdk_path)?
-                    } else {
-                        panic!("pkg-config failed: {}", e);
+    let clang_args = {
+        let mut args = match get_source_method() {
+            Cmake(src_path) => build_cmake(src_path),
+            RawStatic(sdk_path) => build_raw_static(sdk_path)?,
+            other => {
+                // check if apriltag is available on system
+                match pkg_config::probe_library("apriltag") {
+                    Ok(_) => vec![],
+                    Err(e) => {
+                        if let PkgConfigThenStatic(sdk_path) = other {
+                            build_raw_static(sdk_path)?
+                        } else {
+                            panic!("pkg-config failed: {}", e);
+                        }
                     }
                 }
             }
-        }
+        };
+
+        // tell clang keep the comments due to the issue
+        // https://github.com/rust-lang/rust-bindgen/issues/426
+        args.push("-fretain-comments-from-system-headers".into());
+
+        args
     };
 
     // If we need to regenerate the .rs files for bindings, do that, too.
@@ -97,6 +105,7 @@ fn main() -> Result<(), Error> {
         let bindgen_builder = bindgen::Builder::default()
             .header("wrapper.h")
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+            .generate_comments(true)
             .whitelist_type("apriltag_.*")
             .whitelist_type("image_u8_.*")
             .whitelist_type("image_u8x3_.*")
