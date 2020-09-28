@@ -5,7 +5,7 @@ use apriltag_sys as sys;
 /// The wrapper type of a matrix reference.
 #[derive(Debug)]
 pub struct MatdRef<'a> {
-    ref_: &'a sys::matd_t,
+    pub(crate) ref_: &'a sys::matd_t,
 }
 
 impl<'a> MatdRef<'a> {

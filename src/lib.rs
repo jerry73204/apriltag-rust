@@ -20,4 +20,4 @@ pub use detector::{Detector, DetectorBuilder};
 pub use families::Family;
 pub use image_buf::Image;
 pub use matd::MatdRef;
-pub use pose::estimate_tag_pose;
+pub use pose::Pose;

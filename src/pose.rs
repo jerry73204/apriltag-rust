@@ -1,37 +1,26 @@
-use crate::{detection::DetectionInfo, MatdRef};
+use crate::MatdRef;
 use apriltag_sys as sys;
-use std::ptr::NonNull;
 
 #[repr(transparent)]
-pub struct Pose {
-    pub(crate) ptr: NonNull<sys::apriltag_pose_t>,
-}
+pub struct Pose(pub(crate) sys::apriltag_pose_t);
 
 impl Pose {
-    pub fn R(&self) -> MatdRef<'_> {
-        unsafe { MatdRef::from_ptr(self.ptr.as_ref().R) }
+    /// Gets the rotation matrix.
+    pub fn rotation(&self) -> MatdRef<'_> {
+        unsafe { MatdRef::from_ptr(self.0.R) }
     }
 
-    pub fn t(&self) -> MatdRef<'_> {
-        unsafe { MatdRef::from_ptr(self.ptr.as_ref().t) }
-    }
-
-    pub(crate) unsafe fn from_ptr(ptr: *mut sys::apriltag_pose_t) -> Self {
-        Self {
-            ptr: NonNull::new(ptr).unwrap()
-        }
+    /// Gets the translation matrix.
+    pub fn translation(&self) -> MatdRef<'_> {
+        unsafe { MatdRef::from_ptr(self.0.t) }
     }
 }
 
-pub fn estimate_tag_pose(info: &mut DetectionInfo) -> Pose {
-    unsafe {
-        let pose_ptr = &mut sys::apriltag_pose_t {
-            R: sys::matd_create(0, 0),
-            t: sys::matd_create(0, 0)
-        } as *mut _;
-    
-        sys::estimate_tag_pose(info.ptr.as_ptr(), pose_ptr);
-    
-        return Pose::from_ptr(pose_ptr);
+impl Drop for Pose {
+    fn drop(&mut self) {
+        unsafe {
+            sys::matd_destroy(self.0.R);
+            sys::matd_destroy(self.0.t);
+        }
     }
 }

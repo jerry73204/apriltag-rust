@@ -1,8 +1,8 @@
 //! Tag detection types.
 
-use crate::matd::MatdRef;
+use crate::{matd::MatdRef, pose::Pose};
 use apriltag_sys as sys;
-use std::ptr::NonNull;
+use std::{mem::MaybeUninit, ptr::NonNull};
 
 /// Represent a marker detection outcome.
 #[repr(transparent)]
@@ -102,6 +102,15 @@ impl DetectionInfo {
     /// Get the camera's center y (in pixels).
     pub fn cy(&self) -> f64 {
         unsafe { self.ptr.as_ref().cy }
+    }
+
+    /// Estimates the pose of tag.
+    pub fn estimate_tag_pose(&mut self) -> Pose {
+        unsafe {
+            let mut pose: MaybeUninit<sys::apriltag_pose_t> = MaybeUninit::uninit();
+            sys::estimate_tag_pose(self.ptr.as_mut(), pose.as_mut_ptr());
+            Pose(pose.assume_init())
+        }
     }
 
     pub(crate) unsafe fn from_raw(ptr: *mut sys::apriltag_detection_info_t) -> Self {
