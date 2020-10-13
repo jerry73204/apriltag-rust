@@ -46,6 +46,20 @@ impl Detection {
     }
 }
 
+impl Display for Detection {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("Detection")
+            .field("id", &self.id())
+            .field("hamming", &self.hamming())
+            .field("decision_margin", &self.decision_margin())
+            .field("center", &self.center())
+            .field("corners", &self.corners())
+            .finish()?;
+        Ok(())
+    }
+}
+
 impl Drop for Detection {
     fn drop(&mut self) {
         unsafe {

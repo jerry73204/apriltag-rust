@@ -42,23 +42,8 @@ mod simple_detector {
             println!("# image {}", path.display());
 
             detections.into_iter().enumerate().for_each(|(index, det)| {
-                println!(
-                    "- detection {}\n\
-                     id: {}\n\
-                     hamming: {}\n\
-                     decision_margin: {}\n\
-                     center: {:?}\n\
-                     corners: {:?}\n\
-                     homography: {:?}\n\
-                     ",
-                    index,
-                    det.id(),
-                    det.hamming(),
-                    det.decision_margin(),
-                    det.center(),
-                    det.corners(),
-                    det.homography().data()
-                );
+                println!("- detection {}", index);
+                println!("{}", det);
             });
         }
         Ok(())
