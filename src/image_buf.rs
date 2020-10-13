@@ -51,7 +51,7 @@ impl Image {
     }
 
     /// Create an iterator that iterates over the pixels in row-major order.
-    pub fn samples_iter<'a>(&'a self) -> SamplesIter<'a> {
+    pub fn samples_iter(&self) -> SamplesIter<'_> {
         SamplesIter {
             image: self,
             width: self.width(),
@@ -270,7 +270,7 @@ mod image_conv {
             let mut samples = vec![];
             samples.extend_from_slice(from.as_ref());
 
-            let flat = FlatSamples {
+            FlatSamples {
                 samples,
                 layout: SampleLayout {
                     channels: 1,
@@ -281,8 +281,7 @@ mod image_conv {
                     height_stride: stride,
                 },
                 color_hint: Some(ColorType::L8),
-            };
-            flat
+            }
         }
     }
 

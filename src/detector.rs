@@ -47,6 +47,12 @@ impl DetectorBuilder {
     }
 }
 
+impl Default for DetectorBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// The marker detector.
 #[derive(Debug)]
 pub struct Detector {
