@@ -1,6 +1,6 @@
 //! The matrix type.
 
-use apriltag_sys as sys;
+use crate::common::*;
 
 /// The wrapper type of a matrix reference.
 #[derive(Debug)]

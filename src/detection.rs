@@ -1,8 +1,6 @@
 //! Tag detection types.
 
-use crate::{matd::MatdRef, pose::Pose};
-use apriltag_sys as sys;
-use std::{mem::MaybeUninit, ptr::NonNull};
+use crate::{common::*, matd::MatdRef, pose::Pose};
 
 /// Represent a marker detection outcome.
 #[repr(transparent)]

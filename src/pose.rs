@@ -1,5 +1,4 @@
-use crate::MatdRef;
-use apriltag_sys as sys;
+use crate::{common::*, MatdRef};
 
 #[repr(transparent)]
 pub struct Pose(pub(crate) sys::apriltag_pose_t);

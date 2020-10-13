@@ -1,8 +1,6 @@
 //! AprilTag detector type and its builder.
 
-use crate::{detection::Detection, families::Family, image_buf::Image, zarray::Zarray};
-use apriltag_sys as sys;
-use std::{mem, os::raw::c_int, ptr::NonNull};
+use crate::{common::*, detection::Detection, families::Family, image_buf::Image, zarray::Zarray};
 
 /// The detector builder that creates [Detector].
 #[derive(Debug)]

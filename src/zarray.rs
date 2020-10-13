@@ -1,14 +1,4 @@
-use apriltag_sys as sys;
-use std::{
-    convert::AsRef,
-    ffi::c_void,
-    marker::PhantomData,
-    mem,
-    ops::{Index, IndexMut},
-    os::raw::c_char,
-    ptr::NonNull,
-    slice,
-};
+use crate::common::*;
 
 #[derive(Debug)]
 pub struct Zarray<T> {
