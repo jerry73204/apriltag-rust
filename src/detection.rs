@@ -136,10 +136,19 @@ impl Detection {
         pose
     }
 
-    pub(crate) unsafe fn from_raw(ptr: *mut sys::apriltag_detection_t) -> Self {
+    /// Creates an instance from pointer.
+    ///
+    /// The pointer will be managed by the type. Do not run manual deallocation on the pointer.
+    /// Panics if the pointer is null.
+    pub unsafe fn from_raw(ptr: *mut sys::apriltag_detection_t) -> Self {
         Self {
             ptr: NonNull::new(ptr).unwrap(),
         }
+    }
+
+    /// Returns the underlying pointer.
+    pub unsafe fn into_raw(self) -> NonNull<sys::apriltag_detection_t> {
+        ManuallyDrop::new(self).ptr
     }
 }
 

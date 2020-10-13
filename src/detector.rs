@@ -88,6 +88,21 @@ impl Detector {
             self.ptr.as_mut().debug = debug as c_int;
         }
     }
+
+    /// Creates an instance from pointer.
+    ///
+    /// The pointer will be managed by the type. Do not run manual deallocation on the pointer.
+    /// Panics if the pointer is null.
+    pub unsafe fn from_raw(ptr: *mut sys::apriltag_detector_t) -> Self {
+        Self {
+            ptr: NonNull::new(ptr).unwrap(),
+        }
+    }
+
+    /// Returns the underlying pointer.
+    pub unsafe fn into_raw(self) -> NonNull<sys::apriltag_detector_t> {
+        ManuallyDrop::new(self).ptr
+    }
 }
 
 impl Drop for Detector {
