@@ -152,7 +152,7 @@ impl Detection {
     }
 }
 
-impl Display for Detection {
+impl Debug for Detection {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("Detection")

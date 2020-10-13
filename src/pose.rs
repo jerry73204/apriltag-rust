@@ -21,6 +21,16 @@ impl Pose {
     }
 }
 
+impl Debug for Pose {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("Pose")
+            .field("rotation", &self.rotation())
+            .field("translation", &self.translation())
+            .finish()
+    }
+}
+
 impl Drop for Pose {
     fn drop(&mut self) {
         unsafe {

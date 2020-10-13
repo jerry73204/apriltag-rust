@@ -3,7 +3,6 @@
 use crate::common::*;
 
 /// The wrapper type of a matrix reference.
-#[derive(Debug)]
 pub struct MatdRef<'a> {
     pub(crate) ref_: &'a sys::matd_t,
 }
@@ -32,6 +31,24 @@ impl<'a> MatdRef<'a> {
         Self {
             ref_: ptr.as_ref().expect("please report bug"),
         }
+    }
+}
+
+impl<'a> Debug for MatdRef<'a> {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        let ncols = self.ncols();
+        let nrows = self.nrows();
+        let data = self.data();
+        let mut list = formatter.debug_list();
+
+        for row in 0..nrows {
+            let begin = row * ncols;
+            let end = begin + ncols;
+            let slice = &data[begin..end];
+            list.entry(&slice);
+        }
+
+        list.finish()
     }
 }
 
