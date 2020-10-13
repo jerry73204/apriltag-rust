@@ -3,7 +3,7 @@
 use crate::{
     common::*,
     matd::MatdRef,
-    pose::{Pose, PoseEstimation},
+    pose::{Pose, PoseEstimation, TagParams},
 };
 
 /// Represent a marker detection outcome.
@@ -172,14 +172,4 @@ impl Drop for Detection {
             sys::apriltag_detection_destroy(self.ptr.as_ptr());
         }
     }
-}
-
-/// Stores tag size and camera parameters.
-#[derive(Debug, Clone)]
-pub struct TagParams {
-    pub tagsize: f64,
-    pub fx: f64,
-    pub fy: f64,
-    pub cx: f64,
-    pub cy: f64,
 }

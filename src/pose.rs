@@ -39,3 +39,13 @@ impl Drop for Pose {
         }
     }
 }
+
+/// Stores tag size and camera parameters.
+#[derive(Debug, Clone)]
+pub struct TagParams {
+    pub tagsize: f64,
+    pub fx: f64,
+    pub fy: f64,
+    pub cx: f64,
+    pub cy: f64,
+}
