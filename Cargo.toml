@@ -24,8 +24,9 @@ image = { version = "0.23" }
 argh = "0.1"
 
 [features]
+full = ["image", "nalgebra"]
 buildtime-bindgen = ["apriltag-sys/buildtime-bindgen"]
 
 [package.metadata.docs.rs]
-features = ["image", "nalgebra"]
+features = ["full"]
 no-default-features = true
