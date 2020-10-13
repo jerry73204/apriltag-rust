@@ -4,9 +4,16 @@
 //! The images of pre-generated tags can be found at the official repositoy
 //! [https://github.com/AprilRobotics/apriltag-imgs](https://github.com/AprilRobotics/apriltag-imgs).
 
-use crate::common::*;
+use crate::{common::*, error::Error};
 
 /// Represent a family of pre-generated tags.
+///
+/// It can be instantiated by calling member methods or by [Family::from_str].
+///
+/// ```rust
+/// use apriltag::Family;
+/// let family: Family = "tag16h5".parse().unwrap();
+/// ```
 #[derive(Debug, Hash, Eq, PartialEq)]
 pub struct Family {
     pub(crate) ptr: NonNull<sys::apriltag_family_t>,
@@ -80,12 +87,36 @@ impl Family {
     pub(crate) unsafe fn into_raw(self) -> NonNull<sys::apriltag_family_t> {
         ManuallyDrop::new(self).ptr
     }
+}
 
-    // pub(crate) unsafe fn from_raw(ptr: *mut sys::apriltag_family_t) -> Self {
-    //     Self {
-    //         ptr: NonNull::new(ptr).unwrap(),
-    //     }
-    // }
+impl FromStr for Family {
+    type Err = Error;
+
+    /// Creates a [Family](Family) instance by family name.
+    ///
+    /// Supported names:
+    /// - tag16h5
+    /// - tag25h9
+    /// - tag36h11
+    /// - tagCircle21h7
+    /// - tagCircle49h12
+    /// - tagStandard41h12
+    /// - tagStandard52h13
+    /// - tagCustom48h12
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        let family = match text {
+            "tag16h5" => Self::tag_16h5(),
+            "tag25h9" => Self::tag_25h9(),
+            "tag36h11" => Self::tag_36h11(),
+            "tagCircle21h7" => Self::tag_circle_21h7(),
+            "tagCircle49h12" => Self::tag_circle_49h12(),
+            "tagStandard41h12" => Self::tag_standard_41h12(),
+            "tagStandard52h13" => Self::tag_standard_52h13(),
+            "tagCustom48h12" => Self::tag_custom_48h12(),
+            _ => return Err(Error::ParseFamilyStringError(text.to_owned())),
+        };
+        Ok(family)
+    }
 }
 
 impl Drop for Family {

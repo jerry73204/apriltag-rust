@@ -10,21 +10,28 @@ mod simple_detector {
     #[derive(Debug, Clone, FromArgs)]
     /// Simple AprilTag detector.
     struct Args {
+        #[argh(option, default = "\"tag16h5\".to_string()")]
+        /// family name.
+        pub family: String,
         #[argh(positional)]
         /// input files.
         pub input_files: Vec<PathBuf>,
     }
 
     pub fn _main() -> Result<()> {
-        let Args { input_files } = argh::from_env();
+        let Args {
+            family: family_name,
+            input_files,
+        } = argh::from_env();
 
         if input_files.is_empty() {
             eprintln!("no input files");
             return Ok(());
         }
 
+        let family: Family = family_name.parse()?;
         let mut detector = DetectorBuilder::new()
-            .add_family_bits(Family::tag_16h5(), 1)
+            .add_family_bits(family, 1)
             .build()
             .unwrap();
 

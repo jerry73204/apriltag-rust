@@ -10,6 +10,7 @@
 mod common;
 pub mod detection;
 pub mod detector;
+pub mod error;
 pub mod families;
 pub mod image_buf;
 pub mod matd;
@@ -18,6 +19,7 @@ mod zarray;
 
 pub use detection::{Detection, DetectionInfo};
 pub use detector::{Detector, DetectorBuilder};
+pub use error::Error;
 pub use families::Family;
 pub use image_buf::Image;
 pub use matd::MatdRef;
