@@ -1,3 +1,5 @@
+//! Pose types storing estimated rotation and translation parameters.
+
 use crate::{common::*, MatdRef};
 
 /// Estimated pose along with error.
@@ -6,6 +8,7 @@ pub struct PoseEstimation {
     pub error: f64,
 }
 
+/// Estimated pose rotation and translation parameters.
 #[repr(transparent)]
 pub struct Pose(pub(crate) sys::apriltag_pose_t);
 

@@ -136,6 +136,7 @@ impl Drop for Image {
     }
 }
 
+/// The iterator of image samples.
 #[derive(Debug, Clone)]
 pub struct SamplesIter<'a> {
     image: &'a Image,
