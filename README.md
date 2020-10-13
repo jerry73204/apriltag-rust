@@ -20,46 +20,36 @@ apriltag = "0.1.0"
 
 The feature flags control the supported conversions from/to third-party types. It includes
 
+- **full**: Enable most available features.
 - **nalgebra**: Get type conversions from/to two dimensional byte matrix from [nalgebra](https://crates.io/crates/nalgebra) crate.
 - **image**: Get type conversions from/to image types from [image](https://crates.io/crates/image) crate.
 
 ### Customize the build
 
-If you would like to customize the way to compile the AprilTag library,
+If you would like to customize the way to link the AprilTag library,
 please read the notes in [apriltag-sys](https://crates.io/crates/apriltag-sys) README.
 
 ## Example
 
-The snipplet works with [image](https://crates.io/crates/image) crate and prints marker detections.
-You may check the [example](example) directory for complete runnable examples.
+To run detection on an image, run
 
-
-```rust
-let image = image::open(&path)?;
-let detections = detector.detect(image.to_luma());
-
-println!("# image {}", path.display());
-
-detections.into_iter().enumerate().for_each(|(index, det)| {
-    println!(
-        "- detection {}\n\
-         id: {}\n\
-         hamming: {}\n\
-         decision_margin: {}\n\
-         center: {:?}\n\
-         corners: {:?}\n\
-         homography: {:?}\n\
-         ",
-        index,
-        det.id(),
-        det.hamming(),
-        det.decision_margin(),
-        det.center(),
-        det.corners(),
-        det.homography().data()
-    );
-});
+```sh
+cargo run --features full --example detector -- input.jpg
 ```
+
+It accepts additional arguments:
+
+- `--family tag36h11` specifies the tag36h11 tag family
+- `--tag-params 1,2.1,2.2,4,5` sets the tag size, fx, fy, cx and cy parameters. It enable pose estimation feature.
+
+```sh
+cargo run --features full --example detector -- \
+    --family tag36h11 \
+    --tag-params 1,2.1,2.2,4,5 \
+    input.jpg
+```
+
+The demo implementation can be found in [examples](examples) directory.
 
 ## License
 
