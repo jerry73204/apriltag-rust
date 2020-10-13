@@ -17,10 +17,10 @@ pub mod matd;
 pub mod pose;
 mod zarray;
 
-pub use detection::{Detection, DetectionInfo};
+pub use detection::{Detection, TagParams};
 pub use detector::{Detector, DetectorBuilder};
 pub use error::Error;
 pub use families::Family;
 pub use image_buf::Image;
 pub use matd::MatdRef;
-pub use pose::Pose;
+pub use pose::{Pose, PoseEstimation};

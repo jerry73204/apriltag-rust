@@ -1,5 +1,11 @@
 use crate::{common::*, MatdRef};
 
+/// Estimated pose along with error.
+pub struct PoseEstimation {
+    pub pose: Pose,
+    pub error: f64,
+}
+
 #[repr(transparent)]
 pub struct Pose(pub(crate) sys::apriltag_pose_t);
 
