@@ -1,10 +1,11 @@
 use anyhow::Result;
 
-#[cfg(feature = "image")]
+#[cfg(feature = "full")]
 mod simple_detector {
     use anyhow::{ensure, Context, Error, Result};
     use apriltag::{DetectorBuilder, Family, TagParams};
     use argh::FromArgs;
+    use nalgebra::Isometry3;
     use std::{path::PathBuf, str::FromStr};
 
     #[derive(Debug, Clone, FromArgs)]
@@ -109,6 +110,9 @@ mod simple_detector {
                 if let Some(tag_params) = &tag_params {
                     let pose = det.estimate_tag_pose(tag_params);
                     println!("  - pose {}: {:#?}", index, pose);
+
+                    let isometry = pose.map(|pose| pose.to_isometry());
+                    println!("  - isometry {}: {:#?}", index, isometry);
                 }
             });
         }
@@ -116,12 +120,12 @@ mod simple_detector {
     }
 }
 
-#[cfg(feature = "image")]
+#[cfg(feature = "full")]
 fn main() -> Result<()> {
     simple_detector::_main()
 }
 
-#[cfg(not(feature = "image"))]
+#[cfg(not(feature = "full"))]
 fn main() -> Result<()> {
-    panic!(r#"please enable the "image" feature to run the example"#);
+    panic!(r#"please enable the "full" feature to run the example"#);
 }
