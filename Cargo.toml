@@ -1,6 +1,6 @@
 [package]
 name = "apriltag"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["jerry73204 <jerry73204@gmail.com>"]
 edition = "2018"
 description = "High level Rust bindings to AprilTag library"
@@ -12,7 +12,7 @@ readme = "README.md"
 license-file = "LICENSE"
 
 [dependencies]
-apriltag-sys = "0.1.4"
+apriltag-sys = "0.1.5"
 libc = "0.2"
 thiserror = "1.0"
 image = { version = "0.23", optional = true }
