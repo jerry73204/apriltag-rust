@@ -55,14 +55,14 @@ impl<'a> Debug for MatdRef<'a> {
 #[cfg(feature = "nalgebra")]
 mod nalgebra_conv {
     use super::*;
-    use nalgebra::{base::dimension::Dynamic, DMatrixSlice};
+    use nalgebra::{base::dimension::Dynamic, DMatrix, DMatrixSlice};
 
-    impl<'a> From<MatdRef<'a>> for DMatrixSlice<'a, f64, Dynamic, Dynamic> {
+    impl<'a> From<MatdRef<'a>> for DMatrix<f64> {
         fn from(from: MatdRef<'a>) -> Self {
             let nrows = from.nrows();
             let ncols = from.ncols();
             let data = from.data();
-            Self::from_slice_with_strides(data, nrows, ncols, ncols, 1)
+            DMatrixSlice::from_slice_with_strides(data, nrows, ncols, ncols, 1).transpose()
         }
     }
 }
