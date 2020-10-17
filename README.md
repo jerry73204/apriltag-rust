@@ -13,7 +13,7 @@ Import apriltag-sys dependency in your Cargo.toml
 
 ```toml
 [dependencies]
-apriltag = "0.2"
+apriltag = "0.3"
 ```
 
 ### Feature Flags

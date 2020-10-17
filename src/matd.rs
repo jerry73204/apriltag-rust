@@ -55,7 +55,7 @@ impl<'a> Debug for MatdRef<'a> {
 #[cfg(feature = "nalgebra")]
 mod nalgebra_conv {
     use super::*;
-    use nalgebra::{base::dimension::Dynamic, DMatrix, DMatrixSlice};
+    use nalgebra::{DMatrix, DMatrixSlice};
 
     impl<'a> From<MatdRef<'a>> for DMatrix<f64> {
         fn from(from: MatdRef<'a>) -> Self {
