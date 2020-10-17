@@ -16,7 +16,7 @@ Import `apriltag-sys` dependency in your `Cargo.toml`
 
 ```toml
 [dependencies]
-apriltag-sys = "^0.1.3"
+apriltag-sys = "0.1"
 ```
 
 ### Specifying how to compile and link the apriltag C library.
