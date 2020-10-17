@@ -5,7 +5,6 @@ mod simple_detector {
     use anyhow::{ensure, Context, Error, Result};
     use apriltag::{DetectorBuilder, Family, TagParams};
     use argh::FromArgs;
-    use nalgebra::Isometry3;
     use std::{path::PathBuf, str::FromStr};
 
     #[derive(Debug, Clone, FromArgs)]
