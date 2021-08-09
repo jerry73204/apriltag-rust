@@ -19,7 +19,7 @@ pub mod pose;
 mod zarray;
 
 pub use detection::Detection;
-pub use detector::{Detector, DetectorBuilder};
+pub use detector::{Angle, Detector, DetectorBuilder};
 pub use error::Error;
 pub use families::Family;
 pub use image_buf::Image;
