@@ -40,6 +40,20 @@ The location of the apriltag source is specified by the `APRILTAG_SRC`
 environment variable. If this is not set, a local git submodule checkout of the
 apriltag source will be used.
 
+#### Building under Windows
+
+Strictly speaking, using apriltag on Microsoft Windows is not *officially* supported by the developers. In practice, the library works well even on this operating system. 
+The only additional complexity emerges during the building process. The C library requires *pthread.h* not shipped with Windows by default.
+Consequently, different shims like [pthreads4w](https://sourceforge.net/projects/pthreads4w/) and [Pthreads-w32](https://www.sourceware.org/pthreads-win32/) are required.
+If one of them is installed, setting the environment variables `APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR` to its include directory and `APRILTAG_SYS_WINDOWS_PTHREAD_STATIC_LIB` to the compiled static library allows a successful build under Windows with `APRILTAG_SYS_METHOD=raw,static`.
+
+As an example using [vcpkg](https://github.com/microsoft/vcpkg), building under Windows consists of three additional steps:
+1. Install the shim using `vcpkg install pthread:x64-windows-static`
+2. Specify the include directoy (here in PowerShell): `$env:APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR="%SPECIFY VCPKG DIRECTORY HERE%\installed\x64-windows-static\include"`
+3. Specify the path to the static library (again in PowerShell): `$env:APRILTAG_SYS_WINDOWS_PTHREAD_STATIC_LIB="%SPECIFY VCPKG DIRECTORY HERE%\installed\x64-windows-static\lib\pthreadVC3.lib""`
+
+Some shims require `winmm.dll` for high-precision timing shipped by default with all Windows installations. If this linking is not necessary, it can be omitted by setting `APRILTAG_SYS_WINDOWS_NO_WINMM=1`.
+
 ## License
 
 BSD-2-Clause. Please see [license file](LICENSE).
