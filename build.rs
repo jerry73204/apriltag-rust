@@ -70,6 +70,12 @@ fn main() -> Result<(), Error> {
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-env-changed=APRILTAG_SRC");
     println!("cargo:rerun-if-env-changed=APRILTAG_SYS_METHOD");
+    #[cfg(target_os = "windows")]
+    {
+        println!("cargo:rerun-if-env-changed=APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR");
+        println!("cargo:rerun-if-env-changed=APRILTAG_SYS_WINDOWS_PTHREAD_STATIC_LIB");
+        println!("cargo:rerun-if-env-changed=APRILTAG_SYS_WINDOWS_NO_WINMM");
+    }
 
     // Detect which method to use.
     #[allow(unused_variables)]
@@ -139,6 +145,36 @@ fn main() -> Result<(), Error> {
             .expect("Couldn't write bindings!");
     }
 
+    // On Microsoft Windows, apriltag requires an additional dependency as pthread is not available by default. Add a required shim as static library.
+    #[cfg(target_os = "windows")]
+    {
+        match std::env::var_os("APRILTAG_SYS_WINDOWS_PTHREAD_STATIC_LIB")
+        .map(|s| {
+            std::path::PathBuf::from(s.into_string()
+                .expect("If set, APRILTAG_SYS_WINDOWS_PTHREAD_STATIC_LIB environment variable must be UTF-8 string."))
+        }) {
+            Some(pthread_static_lib) if pthread_static_lib.is_file() => {
+                // Add path if the file is not directly placed in a root directory.
+                if let Some(pthread_static_lib_dir) = pthread_static_lib.parent() {
+                    println!("cargo:rustc-link-search={}", pthread_static_lib_dir.display());
+                }
+                println!("cargo:rustc-link-lib={}", pthread_static_lib.file_stem().expect("Valid file").to_str().expect("Valid UTF-8"));
+
+                // Currently, some shims require the function "gettimeofday" not available by default. Linking to winmm fix this issue.
+                if std::env::var_os("APRILTAG_SYS_WINDOWS_NO_WINMM").is_none() {
+                    println!("cargo:rustc-link-lib=winmm");
+                }
+            }
+            Some(pthread_static_lib) => {
+                println!("cargo:warning=The given path for the static library of pthread '{}' specified by APRILTAG_SYS_WINDOWS_PTHREAD_STATIC_LIB is not a valid file", pthread_static_lib.display());
+                std::process::exit(2)
+            }
+            None => {
+                println!("cargo:warning=Under Microsoft Windows, apriltags' dependency 'pthread' is not available by default. Consequently, link.exe is likely to fail with LNK2019 in the next step. Consider installing a shim and specify APRILTAG_SYS_WINDOWS_PTHREAD_STATIC_LIB as path to a static library like 'pthreadVC3.lib'.");
+            }
+        }
+    }
+
     Ok(())
 }
 
@@ -204,6 +240,28 @@ fn build_raw_static(sdk_path: PathBuf) -> Result<Vec<String>, Error> {
 
     compiler.include(&inc_dir);
     compiler.extra_warnings(false);
+
+    // On Microsoft Windows, apriltag requires an additional dependency as PTHREAD is not available by default.
+    #[cfg(target_os = "windows")]
+    {
+        match std::env::var_os("APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR")
+        .map(|s| {
+            std::path::PathBuf::from(s.into_string()
+                .expect("If set, APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR environment variable must be UTF-8 string."))
+        }) {
+            Some(pthread_include_dir) if pthread_include_dir.is_dir() => {
+                compiler.include(pthread_include_dir);
+            }
+            Some(pthread_include_dir) => {
+                println!("cargo:warning=The given include directory for pthread '{}' specified by APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR is not a valid directory in the file system.", pthread_include_dir.display());
+                std::process::exit(2)
+            }
+            None => {
+                println!("cargo:warning=Under Microsoft Windows, apriltags' dependency 'pthread' is not available by default. Consequently, cl.exe is likely to fail in the next step. Consider installing a shim and specify APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR accordingly.");
+            }
+        }
+    }
+
     compiler.compile("apriltags");
 
     Ok(vec![])
