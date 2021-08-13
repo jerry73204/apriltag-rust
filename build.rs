@@ -102,6 +102,18 @@ fn main() -> Result<(), Error> {
         // https://github.com/rust-lang/rust-bindgen/issues/426
         args.push("-fretain-comments-from-system-headers".into());
 
+        // Allow bindgen to find a pthreads shim on Microsoft Windows
+        #[cfg(target_os = "windows")]
+        {
+            if let Some(path) = std::env::var_os("APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR")
+            .map(|s| {
+                std::path::PathBuf::from(s.into_string()
+                    .expect("If set, APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR environment variable must be UTF-8 string."))
+            }) {
+                args.push(format!("-I{}", path.display()));
+            }
+        }
+
         args
     };
 
@@ -112,27 +124,27 @@ fn main() -> Result<(), Error> {
             .header("wrapper.h")
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
             .generate_comments(true)
-            .whitelist_type("apriltag_.*")
-            .whitelist_type("image_u8_.*")
-            .whitelist_type("image_u8x3_.*")
-            .whitelist_type("image_u8x4_.*")
-            .whitelist_type("zarray_.*")
-            .whitelist_type("matd_.*")
-            .whitelist_function("apriltag_.*")
-            .whitelist_function("estimate_.*")
-            .whitelist_function("tag16h5_.*")
-            .whitelist_function("tag25h9_.*")
-            .whitelist_function("tag36h11_.*")
-            .whitelist_function("tagCircle21h7_.*")
-            .whitelist_function("tagCircle49h12_.*")
-            .whitelist_function("tagCustom48h12_.*")
-            .whitelist_function("tagStandard41h12_.*")
-            .whitelist_function("tagStandard52h13_.*")
-            .whitelist_function("image_u8_.*")
-            .whitelist_function("image_u8x3_.*")
-            .whitelist_function("image_u8x4_.*")
-            .whitelist_function("zarray_.*")
-            .whitelist_function("matd_.*");
+            .allowlist_type("apriltag_.*")
+            .allowlist_type("image_u8_.*")
+            .allowlist_type("image_u8x3_.*")
+            .allowlist_type("image_u8x4_.*")
+            .allowlist_type("zarray_.*")
+            .allowlist_type("matd_.*")
+            .allowlist_function("apriltag_.*")
+            .allowlist_function("estimate_.*")
+            .allowlist_function("tag16h5_.*")
+            .allowlist_function("tag25h9_.*")
+            .allowlist_function("tag36h11_.*")
+            .allowlist_function("tagCircle21h7_.*")
+            .allowlist_function("tagCircle49h12_.*")
+            .allowlist_function("tagCustom48h12_.*")
+            .allowlist_function("tagStandard41h12_.*")
+            .allowlist_function("tagStandard52h13_.*")
+            .allowlist_function("image_u8_.*")
+            .allowlist_function("image_u8x3_.*")
+            .allowlist_function("image_u8x4_.*")
+            .allowlist_function("zarray_.*")
+            .allowlist_function("matd_.*");
         let bindgen_builder = bindgen_builder.clang_args(clang_args);
         let bindings = bindgen_builder
             .generate()
