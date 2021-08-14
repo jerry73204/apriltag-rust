@@ -56,24 +56,21 @@ pub struct TagParams {
 #[cfg(feature = "nalgebra")]
 mod nalgebra_conv {
     use super::*;
-    use nalgebra::{IsometryMatrix3, MatrixSlice, Rotation3, Translation3, U1, U3};
+    use nalgebra::{Isometry3, MatrixSlice3, MatrixSlice3x1, Translation3, UnitQuaternion};
+
     impl Pose {
-        pub fn to_isometry(self: &Pose) -> IsometryMatrix3<f64> {
+        pub fn to_isometry(self: &Pose) -> Isometry3<f64> {
             let rotation = self.rotation();
             let translation = self.translation();
 
-            let rotation = Rotation3::from_matrix(
-                &MatrixSlice::from_slice_generic(rotation.data(), U3, U3)
-                    .into_owned()
-                    .transpose(),
-            );
+            let rotation =
+                UnitQuaternion::from_matrix(&MatrixSlice3::from_slice(rotation.data()).transpose());
 
-            let translation: Translation3<f64> =
-                MatrixSlice::from_slice_generic(translation.data(), U3, U1)
-                    .into_owned()
-                    .into();
+            let translation: Translation3<f64> = MatrixSlice3x1::from_slice(translation.data())
+                .into_owned()
+                .into();
 
-            IsometryMatrix3::from_parts(translation, rotation)
+            Isometry3::from_parts(translation, rotation)
         }
     }
 }
