@@ -1,3 +1,5 @@
+//! The heap allocated array used by AprilTag library.
+
 use crate::common::*;
 
 /// A heap allocated array.
