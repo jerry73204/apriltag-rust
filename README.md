@@ -16,7 +16,7 @@ Import `apriltag-sys` dependency in your `Cargo.toml`
 
 ```toml
 [dependencies]
-apriltag-sys = "0.1"
+apriltag-sys = "0.2"
 ```
 
 ### Specifying how to compile and link the apriltag C library.
@@ -56,4 +56,4 @@ Some shims require `winmm.dll` for high-precision timing shipped by default with
 
 ## License
 
-BSD-2-Clause. Please see [license file](LICENSE).
+BSD-2-Clause. Please see the [license file](LICENSE).
