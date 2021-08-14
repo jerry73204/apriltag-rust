@@ -100,7 +100,7 @@ impl Detector {
     }
 
     /// Returns the underlying pointer.
-    pub unsafe fn into_raw(self) -> NonNull<sys::apriltag_detector_t> {
+    pub fn into_raw(self) -> NonNull<sys::apriltag_detector_t> {
         ManuallyDrop::new(self).ptr
     }
 }

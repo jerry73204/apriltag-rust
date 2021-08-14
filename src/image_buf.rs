@@ -86,7 +86,7 @@ impl Image {
     }
 
     /// Returns the underlying pointer.
-    pub unsafe fn into_raw(self) -> NonNull<sys::image_u8_t> {
+    pub fn into_raw(self) -> NonNull<sys::image_u8_t> {
         ManuallyDrop::new(self).ptr
     }
 }
