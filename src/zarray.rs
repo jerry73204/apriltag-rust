@@ -23,7 +23,11 @@ impl<T> Zarray<T> {
         }
     }
 
-    pub(crate) unsafe fn from_raw(ptr: *mut sys::zarray_t) -> Self {
+    /// Creates an instances from raw pointer.
+    ///
+    /// # Safety
+    /// The method is safe when the pointer was created by [apriltag_detector_detect](sys::apriltag_detector_detect).
+    pub unsafe fn from_raw(ptr: *mut sys::zarray_t) -> Self {
         let ptr = NonNull::new(ptr).expect("please report bug");
         assert_eq!(
             ptr.as_ref().el_sz as usize,

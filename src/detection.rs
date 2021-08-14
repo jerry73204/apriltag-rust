@@ -119,6 +119,9 @@ impl Detection {
     ///
     /// The pointer will be managed by the type. Do not run manual deallocation on the pointer.
     /// Panics if the pointer is null.
+    ///
+    /// # Safety
+    /// The method is safe when the pointer was created by [apriltag_detector_detect](sys::apriltag_detector_detect).
     pub unsafe fn from_raw(ptr: *mut sys::apriltag_detection_t) -> Self {
         Self {
             ptr: NonNull::new(ptr).unwrap(),

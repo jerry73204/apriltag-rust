@@ -88,6 +88,9 @@ impl Family {
     ///
     /// The pointer will be managed by the type. Do not run manual deallocation on the pointer.
     /// Panics if the pointer is null.
+    ///
+    /// # Safety
+    /// The method is safe when the pointer was created by [tag16h5_create](sys::tag16h5_create), [tag25h9_create](sys::tag25h9_create), etc.
     pub unsafe fn from_raw(ptr: *mut sys::apriltag_family_t) -> Self {
         Self {
             ptr: NonNull::new(ptr).unwrap(),

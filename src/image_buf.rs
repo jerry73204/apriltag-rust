@@ -79,6 +79,9 @@ impl Image {
     ///
     /// The pointer will be managed by the type. Do not run manual deallocation on the pointer.
     /// Panics if the pointer is null.
+    ///
+    /// # Safety
+    /// The method is safe when the pointer was created by [image_u8_create_stride](sys::image_u8_create_stride) or [image_u8_create_alignment](sys::image_u8_create_alignment).
     pub unsafe fn from_raw(ptr: *mut sys::image_u8_t) -> Self {
         Self {
             ptr: NonNull::new(ptr).unwrap(),
