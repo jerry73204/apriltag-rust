@@ -79,30 +79,18 @@ impl Detection {
             let pose2 = pose2.assume_init();
             let err2 = err2.assume_init();
 
-            let iter1 = if pose1.R == ptr::null_mut() {
-                Some(PoseEstimation {
-                    pose: Pose(pose1),
-                    error: err1,
-                })
-            } else {
-                None
-            }
-            .into_iter();
-            let iter2 = if pose2.R == ptr::null_mut() {
-                Some(PoseEstimation {
-                    pose: Pose(pose2),
-                    error: err2,
-                })
-            } else {
-                None
-            }
-            .into_iter();
+            let pose1 = (!pose1.R.is_null()).then(|| PoseEstimation {
+                pose: Pose(pose1),
+                error: err1,
+            });
 
-            iter1.chain(iter2).collect()
+            let pose2 = (!pose2.R.is_null()).then(|| PoseEstimation {
+                pose: Pose(pose2),
+                error: err2,
+            });
+
+            pose1.into_iter().chain(pose2).collect()
         };
-
-        // make sure it drops after estimate_tag_pose()
-        mem::drop(info);
 
         poses
     }
@@ -118,22 +106,13 @@ impl Detection {
             cy: params.cy,
         };
 
-        let pose = unsafe {
+        unsafe {
             let mut pose: MaybeUninit<sys::apriltag_pose_t> = MaybeUninit::uninit();
             sys::estimate_tag_pose(&mut info as *mut _, pose.as_mut_ptr());
             let pose = pose.assume_init();
 
-            if pose.R == ptr::null_mut() {
-                None
-            } else {
-                Some(Pose(pose))
-            }
-        };
-
-        // make sure it drops after estimate_tag_pose()
-        mem::drop(info);
-
-        pose
+            (!pose.R.is_null()).then(|| Pose(pose))
+        }
     }
 
     /// Creates an instance from pointer.
