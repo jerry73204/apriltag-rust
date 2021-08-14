@@ -1,5 +1,6 @@
 use crate::common::*;
 
+/// A heap allocated array.
 #[derive(Debug)]
 pub struct ZArray<T> {
     ptr: NonNull<sys::zarray_t>,
@@ -142,6 +143,7 @@ impl<T> Drop for ZArray<T> {
     }
 }
 
+/// An iterator to [ZArray].
 #[derive(Debug, Clone)]
 pub struct ZArrayIter<'a, T> {
     zarray: &'a ZArray<T>,

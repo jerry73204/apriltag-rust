@@ -25,3 +25,4 @@ pub use families::Family;
 pub use image_buf::Image;
 pub use matd::MatdRef;
 pub use pose::{Pose, PoseEstimation, TagParams};
+pub use zarray::ZArray;
