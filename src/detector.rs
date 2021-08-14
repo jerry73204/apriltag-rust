@@ -1,6 +1,6 @@
 //! AprilTag detector type and its builder.
 
-use crate::{common::*, detection::Detection, families::Family, image_buf::Image, zarray::Zarray};
+use crate::{common::*, detection::Detection, families::Family, image_buf::Image, zarray::ZArray};
 
 /// The detector builder that creates [Detector].
 #[derive(Debug)]
@@ -69,7 +69,7 @@ impl Detector {
         let detections = unsafe {
             let ptr = sys::apriltag_detector_detect(self.ptr.as_ptr(), image.ptr.as_ptr());
             mem::drop(image);
-            let zarray = Zarray::<*mut sys::apriltag_detection_t>::from_raw(ptr);
+            let zarray = ZArray::<*mut sys::apriltag_detection_t>::from_raw(ptr);
             let detections = zarray
                 .iter()
                 .cloned()

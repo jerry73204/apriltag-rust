@@ -1,12 +1,12 @@
 use crate::common::*;
 
 #[derive(Debug)]
-pub struct Zarray<T> {
+pub struct ZArray<T> {
     ptr: NonNull<sys::zarray_t>,
     _phantom: PhantomData<T>,
 }
 
-impl<T> Zarray<T> {
+impl<T> ZArray<T> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -15,8 +15,8 @@ impl<T> Zarray<T> {
         unsafe { self.ptr.as_ref().size as usize }
     }
 
-    pub fn iter(&self) -> ZarrayIter<T> {
-        ZarrayIter {
+    pub fn iter(&self) -> ZArrayIter<T> {
+        ZArrayIter {
             zarray: self,
             len: self.len(),
             index: 0,
@@ -46,7 +46,7 @@ impl<T> Zarray<T> {
     }
 }
 
-impl<T> AsRef<[T]> for Zarray<T> {
+impl<T> AsRef<[T]> for ZArray<T> {
     fn as_ref(&self) -> &[T] {
         unsafe {
             let as_ref = self.ptr.as_ref();
@@ -55,7 +55,7 @@ impl<T> AsRef<[T]> for Zarray<T> {
     }
 }
 
-impl<T> AsMut<[T]> for Zarray<T> {
+impl<T> AsMut<[T]> for ZArray<T> {
     fn as_mut(&mut self) -> &mut [T] {
         unsafe {
             let as_mut = self.ptr.as_mut();
@@ -64,7 +64,7 @@ impl<T> AsMut<[T]> for Zarray<T> {
     }
 }
 
-impl<T> Index<usize> for Zarray<T> {
+impl<T> Index<usize> for ZArray<T> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -72,13 +72,13 @@ impl<T> Index<usize> for Zarray<T> {
     }
 }
 
-impl<T> IndexMut<usize> for Zarray<T> {
+impl<T> IndexMut<usize> for ZArray<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.as_mut()[index]
     }
 }
 
-impl<T> Clone for Zarray<T> {
+impl<T> Clone for ZArray<T> {
     fn clone(&self) -> Self {
         let ptr = unsafe {
             let from_ptr = self.ptr.as_ptr();
@@ -116,7 +116,7 @@ impl<T> Clone for Zarray<T> {
     }
 }
 
-impl<T> Drop for Zarray<T> {
+impl<T> Drop for ZArray<T> {
     fn drop(&mut self) {
         unsafe {
             let data_ptr = self.ptr.as_mut().data;
@@ -129,13 +129,13 @@ impl<T> Drop for Zarray<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct ZarrayIter<'a, T> {
-    zarray: &'a Zarray<T>,
+pub struct ZArrayIter<'a, T> {
+    zarray: &'a ZArray<T>,
     len: usize,
     index: usize,
 }
 
-impl<'a, T> Iterator for ZarrayIter<'a, T> {
+impl<'a, T> Iterator for ZArrayIter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
