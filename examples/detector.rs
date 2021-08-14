@@ -4,19 +4,18 @@ use anyhow::Result;
 mod simple_detector {
     use anyhow::{ensure, Context, Error, Result};
     use apriltag::{DetectorBuilder, Family, TagParams};
-    use argh::FromArgs;
     use std::{path::PathBuf, str::FromStr};
+    use structopt::StructOpt;
 
-    #[derive(Debug, Clone, FromArgs)]
+    #[derive(Debug, Clone, StructOpt)]
     /// Simple AprilTag detector.
-    struct Args {
-        #[argh(option, default = "\"tag16h5\".to_string()")]
+    struct Opts {
+        #[structopt(long, default_value = "tag16h5")]
         /// family name.
         pub family: String,
-        #[argh(option)]
+        #[structopt(long)]
         /// optional tag parameters in format "tagsize,fx,fy,cx,cy".
         pub tag_params: Option<TagParamsArg>,
-        #[argh(positional)]
         /// input files.
         pub input_files: Vec<PathBuf>,
     }
@@ -80,11 +79,11 @@ mod simple_detector {
     }
 
     pub fn _main() -> Result<()> {
-        let Args {
+        let Opts {
             family: family_name,
             tag_params,
             input_files,
-        } = argh::from_env();
+        } = Opts::from_args();
 
         if input_files.is_empty() {
             eprintln!("no input files");
@@ -100,7 +99,7 @@ mod simple_detector {
 
         for path in input_files.into_iter() {
             let image = image::open(&path)?;
-            let detections = detector.detect(image.to_luma());
+            let detections = detector.detect(image.to_luma8());
 
             println!("= image {}", path.display());
 

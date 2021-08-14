@@ -168,14 +168,11 @@ impl<'a> Iterator for SamplesIter<'a> {
 mod nalgebra_conv {
     use super::*;
     use nalgebra::{
-        base::{
-            dimension::{Dim, Dynamic},
-            storage::Storage,
-        },
-        Matrix, MatrixMN,
+        base::{dimension::Dim, storage::Storage},
+        DMatrix, Matrix,
     };
 
-    impl From<&Image> for MatrixMN<u8, Dynamic, Dynamic> {
+    impl From<&Image> for DMatrix<u8> {
         fn from(from: &Image) -> Self {
             let width = from.width();
             let height = from.height();
@@ -183,7 +180,7 @@ mod nalgebra_conv {
         }
     }
 
-    impl From<Image> for MatrixMN<u8, Dynamic, Dynamic> {
+    impl From<Image> for DMatrix<u8> {
         fn from(from: Image) -> Self {
             Self::from(&from)
         }
@@ -351,31 +348,46 @@ mod image_conv {
 }
 
 #[cfg(test)]
-mod tests {
+#[cfg(feature = "nalgebra")]
+mod tests_with_nalgebra {
     use super::*;
+    use nalgebra::{DMatrix, SMatrix};
 
-    #[cfg(feature = "nalgebra")]
-    use nalgebra::MatrixMN;
+    #[test]
+    fn convert_matrix_vs_image() {
+        let matrix_from = SMatrix::<u8, 80, 40>::new_random();
 
-    #[cfg(feature = "image")]
+        let image = Image::from(&matrix_from);
+        assert_eq!(matrix_from.nrows(), image.height());
+        assert_eq!(matrix_from.ncols(), image.width());
+        assert!({
+            image
+                .samples_iter()
+                .all(|(x, y, value)| value == matrix_from[(y, x)])
+        });
+
+        let matrix_to = DMatrix::from(image);
+        assert_eq!(matrix_from.nrows(), matrix_to.nrows());
+        assert_eq!(matrix_from.ncols(), matrix_to.ncols());
+        assert!({
+            matrix_from
+                .iter()
+                .zip(matrix_to.iter())
+                .all(|(lhs, rhs)| lhs == rhs)
+        });
+    }
+}
+
+#[cfg(test)]
+#[cfg(feature = "image")]
+mod tests_with_image {
+    use super::*;
     use image::{
         flat::{FlatSamples, SampleLayout},
         ColorType, ImageBuffer, Luma,
     };
 
-    #[cfg(feature = "image")]
-    fn diagonal_image(width: usize, height: usize) -> Image {
-        let mut image = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
-        (0..(width.min(height) as usize))
-            .into_iter()
-            .for_each(|index| {
-                image[(index, index)] = 255;
-            });
-        image
-    }
-
     #[test]
-    #[cfg(feature = "image")]
     fn image_clone() {
         let width = 80;
         let height = 60;
@@ -395,7 +407,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "image")]
     fn convert_flat_samples_vs_image() {
         let width = 64;
         let height = 28;
@@ -455,7 +466,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "image")]
     fn convert_image_buffer_vs_image() {
         let width = 120;
         let height = 80;
@@ -490,29 +500,13 @@ mod tests {
         });
     }
 
-    #[test]
-    #[cfg(feature = "nalgebra")]
-    fn convert_matrix_vs_image() {
-        use nalgebra::{U40, U80};
-        let matrix_from = MatrixMN::<u8, U80, U40>::new_random();
-
-        let image = Image::from(&matrix_from);
-        assert_eq!(matrix_from.nrows(), image.height());
-        assert_eq!(matrix_from.ncols(), image.width());
-        assert!({
-            image
-                .samples_iter()
-                .all(|(x, y, value)| value == matrix_from[(y, x)])
-        });
-
-        let matrix_to = MatrixMN::from(image);
-        assert_eq!(matrix_from.nrows(), matrix_to.nrows());
-        assert_eq!(matrix_from.ncols(), matrix_to.ncols());
-        assert!({
-            matrix_from
-                .iter()
-                .zip(matrix_to.iter())
-                .all(|(lhs, rhs)| lhs == rhs)
-        });
+    fn diagonal_image(width: usize, height: usize) -> Image {
+        let mut image = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
+        (0..(width.min(height) as usize))
+            .into_iter()
+            .for_each(|index| {
+                image[(index, index)] = 255;
+            });
+        image
     }
 }
