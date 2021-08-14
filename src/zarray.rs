@@ -46,8 +46,10 @@ impl<T> ZArray<T> {
     }
 }
 
-impl<T> AsRef<[T]> for ZArray<T> {
-    fn as_ref(&self) -> &[T] {
+impl<T> Deref for ZArray<T> {
+    type Target = [T];
+
+    fn deref(&self) -> &Self::Target {
         unsafe {
             let as_ref = self.ptr.as_ref();
             slice::from_raw_parts(as_ref.data as *const T, as_ref.size as usize)
@@ -55,12 +57,24 @@ impl<T> AsRef<[T]> for ZArray<T> {
     }
 }
 
-impl<T> AsMut<[T]> for ZArray<T> {
-    fn as_mut(&mut self) -> &mut [T] {
+impl<T> DerefMut for ZArray<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe {
             let as_mut = self.ptr.as_mut();
             slice::from_raw_parts_mut(as_mut.data as *mut T, as_mut.size as usize)
         }
+    }
+}
+
+impl<T> AsRef<[T]> for ZArray<T> {
+    fn as_ref(&self) -> &[T] {
+        self.deref()
+    }
+}
+
+impl<T> AsMut<[T]> for ZArray<T> {
+    fn as_mut(&mut self) -> &mut [T] {
+        self.deref_mut()
     }
 }
 

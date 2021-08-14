@@ -6,7 +6,7 @@ pub use std::{
     hash::Hash,
     marker::PhantomData,
     mem::{self, ManuallyDrop, MaybeUninit},
-    ops::{Deref, Index, IndexMut},
+    ops::{Deref, DerefMut, Index, IndexMut},
     os::raw::{c_char, c_int, c_uint},
     ptr::{self, NonNull},
     slice,
