@@ -4,8 +4,8 @@ use anyhow::Result;
 mod simple_detector {
     use anyhow::{ensure, Context, Error, Result};
     use apriltag::{DetectorBuilder, Family, TagParams};
-    use structopt::StructOpt;
     use std::{path::PathBuf, str::FromStr};
+    use structopt::StructOpt;
 
     #[derive(Debug, Clone, StructOpt)]
     /// Simple AprilTag detector.
@@ -99,7 +99,7 @@ mod simple_detector {
 
         for path in input_files.into_iter() {
             let image = image::open(&path)?;
-            let detections = detector.detect(image.to_luma());
+            let detections = detector.detect(image.to_luma8());
 
             println!("= image {}", path.display());
 
