@@ -7,6 +7,10 @@ pub struct Zarray<T> {
 }
 
 impl<T> Zarray<T> {
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn len(&self) -> usize {
         unsafe { self.ptr.as_ref().size as usize }
     }
@@ -30,6 +34,11 @@ impl<T> Zarray<T> {
             ptr,
             _phantom: PhantomData,
         }
+    }
+
+    /// Returns the underlying raw pointer.
+    pub fn into_raw(self) -> NonNull<sys::zarray_t> {
+        ManuallyDrop::new(self).ptr
     }
 }
 

@@ -16,7 +16,7 @@ pub mod families;
 pub mod image_buf;
 pub mod matd;
 pub mod pose;
-mod zarray;
+pub mod zarray;
 
 pub use detection::Detection;
 pub use detector::{Detector, DetectorBuilder};
