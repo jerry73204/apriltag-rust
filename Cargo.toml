@@ -22,7 +22,7 @@ nalgebra = { version = "0.22", optional = true }
 anyhow = "1.0"
 thiserror = "1.0"
 image = { version = "0.23" }
-argh = "0.1"
+structopt = "0.3.22"
 
 [features]
 full = ["image", "nalgebra"]
