@@ -1,6 +1,6 @@
 [package]
 name = "apriltag-sys"
-version = "0.1.5"
+version = "0.2.0"
 description = "Rust bindings for AprilTag library"
 authors = ["jerry73204 <jerry73204@gmail.com>", "Andrew Straw <strawman@astraw.com>"]
 edition = "2018"
