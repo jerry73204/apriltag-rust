@@ -11,7 +11,7 @@ lazy_static! {
     static ref OUT_DIR: PathBuf = {
         PathBuf::from(
             std::env::var_os("OUT_DIR")
-                .expect("The CARGO_MANIFEST_DIR environment variable is not set"),
+                .expect("The OUT_DIR environment variable is not set"),
         )
     };
 }
