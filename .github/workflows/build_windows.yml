@@ -14,7 +14,7 @@ jobs:
       with:
         submodules: 'recursive'
     - name: Install the shim for pthread
-      uses: lukka/run-vcpkg@main
+      uses: lukka/run-vcpkg@v7
       id: vcpkg
       with:
         vcpkgArguments: 'pthread'
@@ -26,4 +26,3 @@ jobs:
       env:
         APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR: '${{steps.vcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT}}\installed\x64-windows-static\include'
         APRILTAG_SYS_WINDOWS_PTHREAD_STATIC_LIB: '${{steps.vcpkg.outputs.RUNVCPKG_VCPKG_ROOT_OUT}}\installed\x64-windows-static\lib\pthreadVC3.lib'
-
