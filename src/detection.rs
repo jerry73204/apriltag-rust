@@ -38,6 +38,11 @@ impl Detection {
         unsafe { self.ptr.as_ref().p }
     }
 
+    /// Get a mutable reference to the corners in form of `[[x, y]; 4]`.
+    pub fn corners_mut(&mut self) -> &mut [[f64; 2]; 4] {
+        unsafe { &mut self.ptr.as_mut().p }
+    }
+
     /// Get the homography matrix.
     pub fn homography(&self) -> MatdRef<'_> {
         unsafe { MatdRef::from_ptr(self.ptr.as_ref().H) }
