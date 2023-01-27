@@ -1,3 +1,3 @@
 [submodule "apriltag-src"]
-	path = apriltag-src
+	path = apriltag-sys/apriltag-src
 	url = https://github.com/AprilRobotics/apriltag
