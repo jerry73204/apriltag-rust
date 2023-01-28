@@ -18,11 +18,7 @@ thiserror = "1.0.38"
 
 [dev-dependencies]
 anyhow = "1.0.68"
-thiserror = "1.0.38"
-structopt = "0.3.26"
+clap = { version = "4.1.4", features = ["derive"] }
 
 [features]
 buildtime-bindgen = ["apriltag-sys/buildtime-bindgen"]
-
-[package.metadata.docs.rs]
-no-default-features = true
