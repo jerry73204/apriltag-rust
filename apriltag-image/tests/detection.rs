@@ -1,34 +1,19 @@
 use apriltag::{DetectorBuilder, Family, Image};
 use apriltag_image::ImageExt;
-use std::path::PathBuf;
 
 #[test]
-fn test_detection() {
+fn jpg_file_detection() {
     let image = {
-        let path: PathBuf = [
+        let path = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "test_data",
-            "DICT_APRILTAG_16h5-2x2-500-10-0.8-29,12,22,2.jpg",
-        ]
-        .iter()
-        .collect();
-
-        let file = image::io::Reader::open(&path).unwrap_or_else(|error| {
-            panic!(
-                "Failed to read example data at '{}': {}",
-                path.display(),
-                error
-            );
+            "/test_data/DICT_APRILTAG_16h5-2x2-500-10-0.8-29,12,22,2.jpg"
+        );
+        let file = image::io::Reader::open(path).unwrap_or_else(|error| {
+            panic!("Failed to read example data at '{path}': {error}");
         });
-
         let image = file.decode().unwrap_or_else(|error| {
-            panic!(
-                "Decoding example data at '{}' failed: {}",
-                path.display(),
-                error
-            );
+            panic!("Decoding example data at '{path}' failed: {error}");
         });
-
         Image::from_image_buffer(&image.to_luma8())
     };
 
