@@ -70,6 +70,7 @@ where
 
 /// The marker detector.
 #[derive(Debug)]
+#[repr(transparent)]
 pub struct Detector {
     pub(crate) ptr: NonNull<sys::apriltag_detector_t>,
 }

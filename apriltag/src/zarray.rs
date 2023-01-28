@@ -13,6 +13,7 @@ use std::{
 
 /// A heap allocated array.
 #[derive(Debug)]
+#[repr(transparent)]
 pub struct ZArray<T> {
     ptr: NonNull<sys::zarray_t>,
     _phantom: PhantomData<T>,
@@ -41,11 +42,7 @@ impl<T> ZArray<T> {
     /// The method is safe when the pointer was created by [apriltag_detector_detect](sys::apriltag_detector_detect).
     pub unsafe fn from_raw(ptr: *mut sys::zarray_t) -> Self {
         let ptr = NonNull::new(ptr).expect("please report bug");
-        assert_eq!(
-            ptr.as_ref().el_sz as usize,
-            mem::size_of::<T>(),
-            "please report bug"
-        );
+        assert_eq!(ptr.as_ref().el_sz, mem::size_of::<T>(), "please report bug");
         Self {
             ptr,
             _phantom: PhantomData,

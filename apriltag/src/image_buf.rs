@@ -14,8 +14,12 @@ use std::{
     slice,
 };
 
+#[allow(dead_code)]
+const DEFAULT_ALIGNMENT_U8: usize = 96;
+
 /// The single-channel image with pixels in bytes.
 #[derive(Debug)]
+#[repr(transparent)]
 pub struct Image {
     pub(crate) ptr: NonNull<sys::image_u8_t>,
 }
@@ -180,8 +184,6 @@ mod nalgebra_conv {
         DMatrix, Matrix,
     };
 
-    const DEFAULT_ALIGNMENT_U8: usize = 96;
-
     impl From<&Image> for DMatrix<u8> {
         fn from(from: &Image) -> Self {
             let width = from.width();
@@ -236,6 +238,8 @@ mod nalgebra_conv {
 
 #[cfg(feature = "image")]
 mod image_conv {
+    use std::ops::Deref;
+
     use super::*;
     use image::{
         flat::{FlatSamples, SampleLayout},
@@ -426,15 +430,15 @@ mod tests_with_image {
             let mut samples = Vec::<u8>::new();
             (0..height).into_iter().for_each(|y| {
                 let mut row = vec![];
-                row.resize(stride as usize, 0);
+                row.resize(stride, 0);
                 (0..width).into_iter().for_each(|x| {
                     if x == y {
-                        row[x as usize] = 255;
+                        row[x] = 255;
                     }
                 });
                 samples.append(&mut row);
             });
-            assert_eq!(samples.len(), (height * stride) as usize);
+            assert_eq!(samples.len(), height * stride);
 
             FlatSamples {
                 samples,
@@ -444,7 +448,7 @@ mod tests_with_image {
                     width: width as u32,
                     width_stride: 1,
                     height: height as u32,
-                    height_stride: stride as usize,
+                    height_stride: stride,
                 },
                 color_hint: Some(ColorType::L8),
             }
@@ -456,9 +460,9 @@ mod tests_with_image {
             .flat_map(|y| (0..width).into_iter().map(move |x| (x, y)))
             .for_each(|(x, y)| {
                 if x == y {
-                    assert_eq!(image[(x as usize, y as usize)], 255);
+                    assert_eq!(image[(x, y)], 255);
                 } else {
-                    assert_eq!(image[(x as usize, y as usize)], 0);
+                    assert_eq!(image[(x, y)], 0);
                 }
             });
 
@@ -512,11 +516,9 @@ mod tests_with_image {
 
     fn diagonal_image(width: usize, height: usize) -> Image {
         let mut image = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
-        (0..(width.min(height) as usize))
-            .into_iter()
-            .for_each(|index| {
-                image[(index, index)] = 255;
-            });
+        (0..width.min(height)).into_iter().for_each(|index| {
+            image[(index, index)] = 255;
+        });
         image
     }
 }
