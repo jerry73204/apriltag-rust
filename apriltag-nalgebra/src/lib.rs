@@ -4,6 +4,7 @@ mod pose;
 
 pub use image::ImageExt;
 pub use matd::MatdRefExt;
+pub use nalgebra;
 pub use pose::PoseExt;
 
 pub mod prelude {
