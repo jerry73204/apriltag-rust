@@ -19,4 +19,4 @@ jobs:
       with:
         submodules: 'recursive'
     - name: Run tests
-      run: cargo test --features image
+      run: cargo test
