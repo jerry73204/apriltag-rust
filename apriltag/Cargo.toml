@@ -9,7 +9,7 @@ documentation = "https://docs.rs/apriltag/"
 repository = "https://github.com/jerry73204/apriltag-rust.git"
 homepage = "https://github.com/jerry73204/apriltag-rust"
 readme = "README.md"
-license-file = "LICENSE"
+license = "BSD-2-Clause"
 
 [dependencies]
 apriltag-sys = { version = "0.3.0", path = "../apriltag-sys" }

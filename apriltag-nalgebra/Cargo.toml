@@ -2,8 +2,13 @@
 name = "apriltag-nalgebra"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Conversion from/to nalgebra crate types for apriltag"
+authors = ["jerry73204 <jerry73204@gmail.com>"]
+documentation = "https://docs.rs/apriltag-nalgebra"
+homepage = "https://github.com/jerry73204/apriltag-rust"
+repository = "https://github.com/jerry73204/apriltag-rust.git"
+readme = "README.md"
+license = "BSD-2-Clause"
 
 [dependencies]
 apriltag = { version = "0.4.0", path = "../apriltag" }
