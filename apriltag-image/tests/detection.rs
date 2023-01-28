@@ -1,4 +1,4 @@
-use apriltag::{DetectorBuilder, Family, Image};
+use apriltag::{Detector, Family, Image};
 use apriltag_image::ImageExt;
 
 #[test]
@@ -17,10 +17,10 @@ fn jpg_file_detection() {
         Image::from_image_buffer(&image.to_luma8())
     };
 
-    let mut detector = DetectorBuilder::new()
+    let mut detector = Detector::builder()
         .add_family_bits(Family::tag_16h5(), 1)
         .build()
-        .expect("Valid builder");
+        .unwrap();
 
     // Ensure correct parsing of IDs
     let mut ids_found: Vec<_> = detector

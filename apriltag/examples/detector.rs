@@ -1,5 +1,5 @@
 use anyhow::{ensure, Context, Error, Result};
-use apriltag::{DetectorBuilder, Family, Image, TagParams};
+use apriltag::{Detector, Family, Image, TagParams};
 use clap::Parser;
 use std::str::FromStr;
 
@@ -29,10 +29,7 @@ fn main() -> Result<()> {
 
     let family: Family = family_name.parse()?;
     let tag_params: Option<TagParams> = tag_params.map(|params| params.into());
-    let mut detector = DetectorBuilder::new()
-        .add_family_bits(family, 1)
-        .build()
-        .unwrap();
+    let mut detector = Detector::builder().add_family_bits(family, 1).build()?;
 
     for path in input_files {
         let image = Image::from_pnm_file(&path)?;

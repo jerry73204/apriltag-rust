@@ -1,22 +1,22 @@
 //! AprilTag detector type and its builder.
 
-use crate::{detection::Detection, families::ApriltagFamily, image_buf::Image, zarray::ZArray};
+use crate::{
+    detection::Detection,
+    error::Error,
+    families::{ApriltagFamily, Family},
+    image_buf::Image,
+    zarray::ZArray,
+};
 use apriltag_sys as sys;
 use std::{ffi::c_int, mem::ManuallyDrop, ptr::NonNull};
 
 /// The detector builder that creates [Detector].
 #[derive(Debug)]
-pub struct DetectorBuilder<F>
-where
-    F: ApriltagFamily,
-{
-    families: Vec<(F, usize)>,
+pub struct DetectorBuilder {
+    families: Vec<(Family, usize)>,
 }
 
-impl<F> DetectorBuilder<F>
-where
-    F: ApriltagFamily,
-{
+impl DetectorBuilder {
     /// Create a builder instance.
     pub fn new() -> Self {
         Self { families: vec![] }
@@ -25,8 +25,11 @@ where
     /// Append a tag family.
     ///
     /// The method must be called at least once.
-    pub fn add_family_bits(mut self, family: F, bits_corrected: usize) -> Self {
-        self.families.push((family, bits_corrected));
+    pub fn add_family_bits<F>(mut self, family: F, bits_corrected: usize) -> Self
+    where
+        F: Into<Family>,
+    {
+        self.families.push((family.into(), bits_corrected));
         self
     }
 
@@ -34,12 +37,20 @@ where
     ///
     /// If [add_family_bits](DetectorBuilder::add_family_bits) is never called.
     /// it returns `None`.
-    pub fn build(self) -> Option<Detector> {
+    pub fn build(self) -> Result<Detector, Error> {
         if self.families.is_empty() {
-            return None;
+            return Err(Error::CreateDetectorError {
+                reason: "There is not family set for the detector. \
+                         Did you call add_family_bits()?"
+                    .to_string(),
+            });
         }
 
-        let detector_ptr = unsafe { NonNull::new(sys::apriltag_detector_create()).unwrap() };
+        let detector_ptr = unsafe { sys::apriltag_detector_create() };
+        let detector_ptr =
+            NonNull::new(detector_ptr).ok_or_else(|| Error::CreateDetectorError {
+                reason: "apriltag_detector_create() failed".to_string(),
+            })?;
         for (family, bits_corrected) in self.families {
             unsafe {
                 let family_ptr = family.into_raw();
@@ -51,14 +62,11 @@ where
             }
         }
 
-        Some(Detector { ptr: detector_ptr })
+        Ok(Detector { ptr: detector_ptr })
     }
 }
 
-impl<F> Default for DetectorBuilder<F>
-where
-    F: ApriltagFamily,
-{
+impl Default for DetectorBuilder {
     fn default() -> Self {
         Self::new()
     }
@@ -72,6 +80,10 @@ pub struct Detector {
 }
 
 impl Detector {
+    pub fn builder() -> DetectorBuilder {
+        DetectorBuilder::new()
+    }
+
     /// Run detection on the input image.
     pub fn detect(&mut self, image: &Image) -> Vec<Detection> {
         let detections = unsafe {
