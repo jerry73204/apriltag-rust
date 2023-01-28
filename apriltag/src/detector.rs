@@ -1,14 +1,22 @@
 //! AprilTag detector type and its builder.
 
-use crate::{common::*, detection::Detection, families::Family, image_buf::Image, zarray::ZArray};
+use crate::{
+    common::*, detection::Detection, families::ApriltagFamily, image_buf::Image, zarray::ZArray,
+};
 
 /// The detector builder that creates [Detector].
 #[derive(Debug)]
-pub struct DetectorBuilder {
-    families: Vec<(Family, usize)>,
+pub struct DetectorBuilder<F>
+where
+    F: ApriltagFamily,
+{
+    families: Vec<(F, usize)>,
 }
 
-impl DetectorBuilder {
+impl<F> DetectorBuilder<F>
+where
+    F: ApriltagFamily,
+{
     /// Create a builder instance.
     pub fn new() -> Self {
         Self { families: vec![] }
@@ -17,7 +25,7 @@ impl DetectorBuilder {
     /// Append a tag family.
     ///
     /// The method must be called at least once.
-    pub fn add_family_bits(mut self, family: Family, bits_corrected: usize) -> Self {
+    pub fn add_family_bits(mut self, family: F, bits_corrected: usize) -> Self {
         self.families.push((family, bits_corrected));
         self
     }
@@ -32,12 +40,12 @@ impl DetectorBuilder {
         }
 
         let detector_ptr = unsafe { NonNull::new(sys::apriltag_detector_create()).unwrap() };
-        for (family, bits_corrected) in self.families.into_iter() {
+        for (family, bits_corrected) in self.families {
             unsafe {
                 let family_ptr = family.into_raw();
                 sys::apriltag_detector_add_family_bits(
                     detector_ptr.as_ptr(),
-                    family_ptr.as_ptr(),
+                    family_ptr,
                     bits_corrected as c_int,
                 );
             }
@@ -47,7 +55,10 @@ impl DetectorBuilder {
     }
 }
 
-impl Default for DetectorBuilder {
+impl<F> Default for DetectorBuilder<F>
+where
+    F: ApriltagFamily,
+{
     fn default() -> Self {
         Self::new()
     }
