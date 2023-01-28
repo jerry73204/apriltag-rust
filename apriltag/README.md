@@ -6,50 +6,51 @@ High-level API for AprilTag library built on top of [apriltag-sys](https://crate
 
 ### Import to your project
 
-Follow the install instructions on official [repository](https://github.com/AprilRobotics/apriltag)
-to install AprilTag library.
+Add apriltag crate to your `Cargo.toml`.
 
-Import apriltag-sys dependency in your Cargo.toml
-
-```toml
-[dependencies]
-apriltag = "0.3"
+```sh
+cargo add apriltag
 ```
 
-### Feature Flags
+### Customize the build (optional)
 
-The feature flags control the supported conversions from/to third-party types. It includes
-
-- **full**: Enable most available features.
-- **nalgebra**: Get type conversions from/to two dimensional byte matrix from [nalgebra](https://crates.io/crates/nalgebra) crate.
-- **image**: Get type conversions from/to image types from [image](https://crates.io/crates/image) crate.
-
-### Customize the build
-
-If you would like to customize the way to link the AprilTag library,
-please read the notes in [apriltag-sys](https://crates.io/crates/apriltag-sys) README.
+The apriltag crate ships and statically links the AprilTag C library
+by default. If you would like to customize the way to link the
+AprilTag library, please read the notes in
+[apriltag-sys](https://crates.io/crates/apriltag-sys) README.
 
 ## Example
 
-To run detection on an image, run
+To run apriltag detection on an PNM image,
 
 ```sh
-cargo run --features full --example detector -- input.jpg
+cargo run --example detector -- input.pnm
 ```
 
 It accepts additional arguments:
 
-- `--family tag36h11` specifies the tag36h11 tag family
-- `--tag-params 1,2.1,2.2,4,5` sets the tag size, fx, fy, cx and cy parameters. It enable pose estimation feature.
-
 ```sh
-cargo run --features full --example detector -- \
+cargo run --example detector -- \
     --family tag36h11 \
     --tag-params 1,2.1,2.2,4,5 \
-    input.jpg
+    input.pnm
 ```
 
-The demo implementation can be found in [examples](examples) directory.
+where the arguments are explained as follows.
+
+- `--family tag36h11` specifies the tag36h11 tag family.
+- `--tag-params 1,2.1,2.2,4,5` sets the tag size, fx, fy, cx and cy parameters. It enable pose estimation feature.
+
+
+## Third-party type conversions
+
+Third-party type conversions are supported by extension crates, including
+
+- [apriltag-nalgebra](https://crates.io/crates/apriltag-nalgebra): Add
+  conversions from/to two dimensional byte matrix in nalgebra crate.
+- [apriltag-image](https://crates.io/crates/apriltag-image): Add
+  conversions from/to image types in image crate.
+
 
 ## License
 
