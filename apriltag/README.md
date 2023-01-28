@@ -1,6 +1,7 @@
-# apriltag-rust
+# apriltag crate
 
-High-level API for AprilTag library built on top of [apriltag-sys](https://crates.io/crates/apriltag-sys).
+High-level API for AprilTag library built on top of
+[apriltag-sys](https://crates.io/crates/apriltag-sys).
 
 ## Usage
 

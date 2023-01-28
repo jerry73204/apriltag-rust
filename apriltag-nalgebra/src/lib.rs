@@ -1,3 +1,5 @@
+//! Adds image conversion from/to [nalgebra] crate for [apriltag] crate.
+
 mod image;
 mod matd;
 mod pose;

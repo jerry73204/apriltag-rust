@@ -1,9 +1,10 @@
 //! Image types for AprilTag detection.
 //!
 //! The [Image] type stores the image in single channel byte buffer.
-//! It can be created by [zeros_stride](Image::zeros_stride),
-//! [zeros_alignment](Image::zeros_alignment) or converted from
-//! third-party types using extension crates.
+//! It can be created by
+//! [zeros_with_stride](Image::zeros_with_stride),
+//! [zeros_with_alignment](Image::zeros_with_alignment) or converted
+//! from third-party types using extension crates.
 
 use crate::Error;
 use apriltag_sys as sys;
