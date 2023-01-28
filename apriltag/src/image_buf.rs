@@ -1,21 +1,22 @@
 //! Image types for AprilTag detection.
 //!
 //! The [Image] type stores the image in single channel byte buffer.
-//! It can be created by [zeros_stride](Image::zeros_stride), [zeros_alignment](Image::zeros_alignment)
-//! or converted from third-party types.
-//! The supported third-party type conversions depend on the feature flags.
+//! It can be created by [zeros_stride](Image::zeros_stride),
+//! [zeros_alignment](Image::zeros_alignment) or converted from
+//! third-party types using extension crates.
 
+use crate::Error;
 use apriltag_sys as sys;
 use std::{
-    ffi::c_uint,
+    ffi::{c_int, c_uint, CString},
+    iter,
     mem::ManuallyDrop,
     ops::{Index, IndexMut},
     ptr::NonNull,
     slice,
 };
 
-#[allow(dead_code)]
-const DEFAULT_ALIGNMENT_U8: usize = 96;
+pub const DEFAULT_ALIGNMENT_U8: usize = 96;
 
 /// The single-channel image with pixels in bytes.
 #[derive(Debug)]
@@ -25,63 +26,174 @@ pub struct Image {
 }
 
 impl Image {
-    /// Create an [Image] with zeros.
+    /// Give width and height and create an uninitialized image.
+    ///
+    /// # Safety
+    ///
+    /// After the image is returned, the caller must explicitly
+    /// initialize the image buffer.
+    pub unsafe fn new_uinit(width: usize, height: usize) -> Result<Self, Error> {
+        let ptr = sys::image_u8_create(width as c_uint, height as c_uint);
+        let ptr = NonNull::new(ptr).ok_or_else(|| Error::CreateImageError {
+            reason: "image_u8_create() failed".to_string(),
+        })?;
+        Ok(Self { ptr })
+    }
+
+    /// Give width, height and stride and create an uninitialized image.
+    ///
+    /// # Safety
+    ///
+    /// After the image is returned, the caller must explicitly
+    /// initialize the image buffer.
+    pub unsafe fn new_uinit_with_stride(
+        width: usize,
+        height: usize,
+        stride: usize,
+    ) -> Result<Self, Error> {
+        let ptr = sys::image_u8_create_stride(width as c_uint, height as c_uint, stride as c_uint);
+        let ptr = NonNull::new(ptr).ok_or_else(|| Error::CreateImageError {
+            reason: "image_u8_create() failed".to_string(),
+        })?;
+        Ok(Self { ptr })
+    }
+
+    /// Create an image from a PNM file.
+    pub fn from_pnm_file(path: &str) -> Result<Self, Error> {
+        let cstr = CString::new(path).map_err(|_| Error::CreateImageError {
+            reason: format!("the path '{path}' contains null byte(s)"),
+        })?;
+        let ptr = unsafe { sys::image_u8_create_from_pnm(cstr.as_ptr()) };
+        let ptr = NonNull::new(ptr).ok_or_else(|| Error::CreateImageError {
+            reason: format!("failed to load '{path}' using image_u8_create_from_pnm()"),
+        })?;
+        Ok(Self { ptr })
+    }
+
+    /// Create an image from a PNM file with a specified alignment.
+    pub fn from_pnm_file_with_alignment(path: &str, alignment: usize) -> Result<Self, Error> {
+        let cstr = CString::new(path).map_err(|_| Error::CreateImageError {
+            reason: format!("the path '{path}' contains null byte(s)"),
+        })?;
+        let ptr =
+            unsafe { sys::image_u8_create_from_pnm_alignment(cstr.as_ptr(), alignment as c_int) };
+        let ptr = NonNull::new(ptr).ok_or_else(|| Error::CreateImageError {
+            reason: format!("failed to load '{path}' using image_u8_create_from_pnm()"),
+        })?;
+        Ok(Self { ptr })
+    }
+
+    /// Create a zerod image.
     ///
     /// The `stride` must be more than or equal to `width`. Otherwise it returns `None`.
-    pub fn zeros_stride(width: usize, height: usize, stride: usize) -> Option<Self> {
+    pub fn zeros_with_stride(width: usize, height: usize, stride: usize) -> Result<Self, Error> {
         if width > stride {
-            return None;
+            return Err(Error::CreateImageError {
+                reason: format!("width ({width}) must be less than or equal to stride ({stride})"),
+            });
         }
 
         let ptr = unsafe {
             sys::image_u8_create_stride(width as c_uint, height as c_uint, stride as c_uint)
         };
+        let ptr = NonNull::new(ptr).ok_or_else(|| Error::CreateImageError {
+            reason: "image_u8_create_stride() failed".to_string(),
+        })?;
 
-        Some(Self {
-            ptr: NonNull::new(ptr).unwrap(),
-        })
+        Ok(Self { ptr })
     }
 
-    /// Create an [Image] with zeros.
+    /// Create a zerod image.
     ///
     /// The `alignment` must be non-zero. Otherwise it returns `None`.
-    pub fn zeros_alignment(width: usize, height: usize, alignment: usize) -> Option<Self> {
+    pub fn zeros_with_alignment(
+        width: usize,
+        height: usize,
+        alignment: usize,
+    ) -> Result<Self, Error> {
         if alignment == 0 {
-            return None;
+            return Err(Error::CreateImageError {
+                reason: format!("alignment ({alignment}) must positive"),
+            });
         }
 
         let ptr = unsafe {
             sys::image_u8_create_alignment(width as c_uint, height as c_uint, alignment as c_uint)
         };
+        let ptr = NonNull::new(ptr).ok_or_else(|| Error::CreateImageError {
+            reason: "image_u8_create_alignment() failed".to_string(),
+        })?;
 
-        Some(Self {
-            ptr: NonNull::new(ptr).unwrap(),
-        })
+        Ok(Self { ptr })
     }
 
-    /// Create an iterator that iterates over the pixels in row-major order.
-    pub fn samples_iter(&self) -> SamplesIter<'_> {
-        SamplesIter {
-            image: self,
-            width: self.width(),
-            height: self.height(),
-            index: (0, 0),
-        }
+    /// Create an iterator traversing pixels in row-major order.
+    pub fn samples_iter(&self) -> impl Iterator<Item = u8> + '_ {
+        let height = self.height();
+        let width = self.width();
+        let stride = self.stride();
+        let buffer = self.as_slice();
+
+        let row_offsets =
+            iter::successors(Some(0), move |&offset| Some(offset + stride)).take(height);
+        let pixel_offsets =
+            row_offsets.flat_map(move |row_offset| row_offset..(row_offset + width));
+        pixel_offsets.map(move |offset| buffer[offset])
     }
 
-    /// Get width.
+    /// Create an iterator that traverses pixels with pixel positions
+    /// in row-major order.
+    ///
+    /// The iterator item is in (x, y, pixel_value) format.
+    pub fn indexed_samples_iter(&self) -> impl Iterator<Item = (usize, usize, u8)> + '_ {
+        let height = self.height();
+        let width = self.width();
+        let stride = self.stride();
+        let buffer = self.as_slice();
+
+        let row_offsets = iter::successors(Some(0), move |&offset| Some(offset + stride))
+            .take(height)
+            .enumerate();
+        let pixel_offsets = row_offsets.flat_map(move |(row, row_offset)| {
+            let offsets = row_offset..(row_offset + width);
+            offsets
+                .enumerate()
+                .map(move |(col, offset)| (row, col, offset))
+        });
+        pixel_offsets.map(move |(row, col, offset)| (col, row, buffer[offset]))
+    }
+
+    /// Gets the image width.
     pub fn width(&self) -> usize {
         unsafe { self.ptr.as_ref().width as usize }
     }
 
-    /// Get height.
+    /// Gets the image height.
     pub fn height(&self) -> usize {
         unsafe { self.ptr.as_ref().height as usize }
     }
 
-    /// Get stride.
+    /// Gets the per-row stride in bytes.
     pub fn stride(&self) -> usize {
         unsafe { self.ptr.as_ref().stride as usize }
+    }
+
+    /// Get the pixel buffer with size height*stride.
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe {
+            let image = self.ptr.as_ref();
+            let len = (image.height * image.stride) as usize;
+            slice::from_raw_parts(image.buf, len)
+        }
+    }
+
+    /// Get the mutable pixel buffer with size height*stride.
+    pub fn as_slice_mut(&mut self) -> &mut [u8] {
+        unsafe {
+            let image = self.ptr.as_ref();
+            let len = (image.height * image.stride) as usize;
+            slice::from_raw_parts_mut(image.buf, len)
+        }
     }
 
     /// Creates an instance from pointer.
@@ -148,258 +260,9 @@ impl Drop for Image {
     }
 }
 
-/// The iterator of image samples.
-#[derive(Debug, Clone)]
-pub struct SamplesIter<'a> {
-    image: &'a Image,
-    width: usize,
-    height: usize,
-    index: (usize, usize),
-}
-
-impl<'a> Iterator for SamplesIter<'a> {
-    type Item = (usize, usize, u8);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let (x, y) = self.index;
-
-        let (next_x, next_y, value) = if x + 1 < self.width {
-            (x + 1, y, self.image[(x, y)])
-        } else if y + 1 < self.height {
-            (0, y + 1, self.image[(x, y)])
-        } else {
-            return None;
-        };
-
-        self.index = (next_x, next_y);
-        Some((x, y, value))
-    }
-}
-
-#[cfg(feature = "nalgebra")]
-mod nalgebra_conv {
-    use super::*;
-    use nalgebra::{
-        base::{dimension::Dim, storage::Storage},
-        DMatrix, Matrix,
-    };
-
-    impl From<&Image> for DMatrix<u8> {
-        fn from(from: &Image) -> Self {
-            let width = from.width();
-            let height = from.height();
-            Self::from_fn(height, width, |row, col| from[(col, row)])
-        }
-    }
-
-    impl From<Image> for DMatrix<u8> {
-        fn from(from: Image) -> Self {
-            Self::from(&from)
-        }
-    }
-
-    impl<R, C, S> From<&Matrix<u8, R, C, S>> for Image
-    where
-        R: Dim,
-        C: Dim,
-        S: Storage<u8, R, C>,
-    {
-        fn from(from: &Matrix<u8, R, C, S>) -> Self {
-            let width = from.ncols();
-            let height = from.nrows();
-            let mut to = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
-
-            from.row_iter()
-                .enumerate()
-                .flat_map(|(row_idx, row)| {
-                    row.iter()
-                        .enumerate()
-                        .map(move |(col_idx, value)| (row_idx, col_idx, *value))
-                        .collect::<Vec<_>>()
-                })
-                .for_each(|(row_idx, col_idx, value)| {
-                    to[(col_idx, row_idx)] = value;
-                });
-            to
-        }
-    }
-
-    impl<R, C, S> From<Matrix<u8, R, C, S>> for Image
-    where
-        R: Dim,
-        C: Dim,
-        S: Storage<u8, R, C>,
-    {
-        fn from(from: Matrix<u8, R, C, S>) -> Self {
-            Self::from(&from)
-        }
-    }
-}
-
-#[cfg(feature = "image")]
-mod image_conv {
-    use std::ops::Deref;
-
-    use super::*;
-    use image::{
-        flat::{FlatSamples, SampleLayout},
-        ColorType, ImageBuffer, Luma, Pixel,
-    };
-
-    impl<Buffer> From<&FlatSamples<Buffer>> for Image
-    where
-        Buffer: AsRef<[u8]>,
-    {
-        fn from(from: &FlatSamples<Buffer>) -> Self {
-            match from.color_hint {
-                Some(ColorType::L8) => (),
-                _ => panic!("color type {:?} is not supported", from.color_hint),
-            }
-
-            let SampleLayout { width, height, .. } = from.layout;
-            let mut image =
-                Self::zeros_alignment(width as usize, height as usize, DEFAULT_ALIGNMENT_U8)
-                    .unwrap();
-            let stride = image.stride();
-
-            let sample_iter = (0..height)
-                .flat_map(|y| (0..width).map(move |x| (x, y)))
-                .map(|(x, y)| *from.get_sample(0, x, y).unwrap());
-            let buffer_index_iter = (0..height)
-                .flat_map(|y| (0..width).map(move |x| (x as usize, y as usize)))
-                .map(|(x, y)| y * stride + x);
-
-            buffer_index_iter
-                .zip(sample_iter)
-                .for_each(|(buffer_index, sample)| {
-                    image.as_mut()[buffer_index] = sample;
-                });
-
-            image
-        }
-    }
-
-    impl<Buffer> From<FlatSamples<Buffer>> for Image
-    where
-        Buffer: AsRef<[u8]>,
-    {
-        fn from(from: FlatSamples<Buffer>) -> Self {
-            Image::from(&from)
-        }
-    }
-
-    impl From<&Image> for FlatSamples<Vec<u8>> {
-        fn from(from: &Image) -> Self {
-            let width = from.width();
-            let height = from.height();
-            let stride = from.stride();
-
-            let mut samples = vec![];
-            samples.extend_from_slice(from.as_ref());
-
-            FlatSamples {
-                samples,
-                layout: SampleLayout {
-                    channels: 1,
-                    channel_stride: 1,
-                    width: width as u32,
-                    width_stride: 1,
-                    height: height as u32,
-                    height_stride: stride,
-                },
-                color_hint: Some(ColorType::L8),
-            }
-        }
-    }
-
-    impl From<Image> for FlatSamples<Vec<u8>> {
-        fn from(from: Image) -> Self {
-            Self::from(&from)
-        }
-    }
-
-    impl<Container> From<&ImageBuffer<Luma<u8>, Container>> for Image
-    where
-        Container: Deref<Target = [u8]>,
-    {
-        fn from(from: &ImageBuffer<Luma<u8>, Container>) -> Self {
-            let width = from.width() as usize;
-            let height = from.height() as usize;
-            let mut image = Self::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
-
-            from.enumerate_pixels().for_each(|(x, y, pixel)| {
-                let component = pixel.channels()[0];
-                image[(x as usize, y as usize)] = component;
-            });
-            image
-        }
-    }
-
-    impl<Container> From<ImageBuffer<Luma<u8>, Container>> for Image
-    where
-        Container: Deref<Target = [u8]>,
-    {
-        fn from(from: ImageBuffer<Luma<u8>, Container>) -> Self {
-            Image::from(&from)
-        }
-    }
-
-    impl From<&Image> for ImageBuffer<Luma<u8>, Vec<u8>> {
-        fn from(from: &Image) -> Self {
-            let width = from.width();
-            let height = from.height();
-            ImageBuffer::from_fn(width as u32, height as u32, |x, y| {
-                Luma::from([from[(x as usize, y as usize)]])
-            })
-        }
-    }
-
-    impl From<Image> for ImageBuffer<Luma<u8>, Vec<u8>> {
-        fn from(from: Image) -> Self {
-            Self::from(&from)
-        }
-    }
-}
-
 #[cfg(test)]
-#[cfg(feature = "nalgebra")]
-mod tests_with_nalgebra {
+mod tests {
     use super::*;
-    use nalgebra::{DMatrix, SMatrix};
-
-    #[test]
-    fn convert_matrix_vs_image() {
-        let matrix_from = SMatrix::<u8, 80, 40>::new_random();
-
-        let image = Image::from(&matrix_from);
-        assert_eq!(matrix_from.nrows(), image.height());
-        assert_eq!(matrix_from.ncols(), image.width());
-        assert!({
-            image
-                .samples_iter()
-                .all(|(x, y, value)| value == matrix_from[(y, x)])
-        });
-
-        let matrix_to = DMatrix::from(image);
-        assert_eq!(matrix_from.nrows(), matrix_to.nrows());
-        assert_eq!(matrix_from.ncols(), matrix_to.ncols());
-        assert!({
-            matrix_from
-                .iter()
-                .zip(matrix_to.iter())
-                .all(|(lhs, rhs)| lhs == rhs)
-        });
-    }
-}
-
-#[cfg(test)]
-#[cfg(feature = "image")]
-mod tests_with_image {
-    use super::*;
-    use image::{
-        flat::{FlatSamples, SampleLayout},
-        ColorType, ImageBuffer, Luma,
-    };
 
     #[test]
     fn image_clone() {
@@ -420,102 +283,8 @@ mod tests_with_image {
             });
     }
 
-    #[test]
-    fn convert_flat_samples_vs_image() {
-        let width = 64;
-        let height = 28;
-        let stride = ((width - 1) / DEFAULT_ALIGNMENT_U8 + 1) * DEFAULT_ALIGNMENT_U8;
-
-        let flat_from = {
-            let mut samples = Vec::<u8>::new();
-            (0..height).into_iter().for_each(|y| {
-                let mut row = vec![];
-                row.resize(stride, 0);
-                (0..width).into_iter().for_each(|x| {
-                    if x == y {
-                        row[x] = 255;
-                    }
-                });
-                samples.append(&mut row);
-            });
-            assert_eq!(samples.len(), height * stride);
-
-            FlatSamples {
-                samples,
-                layout: SampleLayout {
-                    channels: 1,
-                    channel_stride: 1,
-                    width: width as u32,
-                    width_stride: 1,
-                    height: height as u32,
-                    height_stride: stride,
-                },
-                color_hint: Some(ColorType::L8),
-            }
-        };
-
-        let image = Image::from(&flat_from);
-        (0..height)
-            .into_iter()
-            .flat_map(|y| (0..width).into_iter().map(move |x| (x, y)))
-            .for_each(|(x, y)| {
-                if x == y {
-                    assert_eq!(image[(x, y)], 255);
-                } else {
-                    assert_eq!(image[(x, y)], 0);
-                }
-            });
-
-        let flat_to = FlatSamples::from(image);
-        assert_eq!(flat_from.color_hint, flat_to.color_hint);
-        assert_eq!(flat_from.layout, flat_to.layout);
-        assert_eq!(flat_from.samples.len(), flat_to.samples.len());
-        assert!({
-            flat_from
-                .samples
-                .iter()
-                .zip(flat_from.samples.iter())
-                .all(|(lhs, rhs)| lhs == rhs)
-        });
-    }
-
-    #[test]
-    fn convert_image_buffer_vs_image() {
-        let width = 120;
-        let height = 80;
-        let image_buf_from = {
-            let mut buf = ImageBuffer::<Luma<u8>, _>::new(width, height);
-            (0..(width.min(height))).into_iter().for_each(|idx| {
-                buf[(idx, idx)][0] = 255;
-            });
-            buf
-        };
-
-        let image = Image::from(&image_buf_from);
-        (0..height)
-            .into_iter()
-            .flat_map(|y| (0..width).into_iter().map(move |x| (x, y)))
-            .for_each(|(x, y)| {
-                if x == y {
-                    assert_eq!(image[(x as usize, y as usize)], 255);
-                } else {
-                    assert_eq!(image[(x as usize, y as usize)], 0);
-                }
-            });
-
-        let image_buf_to = ImageBuffer::from(image);
-        assert_eq!(image_buf_from.width(), image_buf_to.width());
-        assert_eq!(image_buf_from.height(), image_buf_to.height());
-        assert!({
-            image_buf_from
-                .pixels()
-                .zip(image_buf_to.pixels())
-                .all(|(lhs, rhs)| lhs == rhs)
-        });
-    }
-
     fn diagonal_image(width: usize, height: usize) -> Image {
-        let mut image = Image::zeros_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
+        let mut image = Image::zeros_with_alignment(width, height, DEFAULT_ALIGNMENT_U8).unwrap();
         (0..width.min(height)).into_iter().for_each(|index| {
             image[(index, index)] = 255;
         });

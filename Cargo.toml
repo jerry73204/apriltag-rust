@@ -2,4 +2,6 @@
 members = [
     "apriltag",
     "apriltag-sys",
+    "apriltag-nalgebra",
+    "apriltag-image",
 ]

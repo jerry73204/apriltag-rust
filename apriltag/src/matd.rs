@@ -52,18 +52,3 @@ impl<'a> Debug for MatdRef<'a> {
         list.finish()
     }
 }
-
-#[cfg(feature = "nalgebra")]
-mod nalgebra_conv {
-    use super::*;
-    use nalgebra::{DMatrix, DMatrixView};
-
-    impl<'a> From<MatdRef<'a>> for DMatrix<f64> {
-        fn from(from: MatdRef<'a>) -> Self {
-            let nrows = from.nrows();
-            let ncols = from.ncols();
-            let data = from.data();
-            DMatrixView::from_slice_with_strides(data, nrows, ncols, ncols, 1).transpose()
-        }
-    }
-}

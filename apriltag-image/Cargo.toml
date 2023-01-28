@@ -1,0 +1,10 @@
+[package]
+name = "apriltag-image"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+apriltag = { version = "0.3.1", path = "../apriltag" }
+image = "0.24.5"

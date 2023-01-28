@@ -15,20 +15,14 @@ license-file = "LICENSE"
 apriltag-sys = { version = "0.2.0", path = "../apriltag-sys" }
 libc = "0.2.139"
 thiserror = "1.0.38"
-image = { version = "0.24.5", optional = true }
-nalgebra = { version = "0.32.1", optional = true }
 
 [dev-dependencies]
 anyhow = "1.0.68"
 thiserror = "1.0.38"
-image = "0.24.5"
 structopt = "0.3.26"
-nalgebra = { version = "0.32.1", features = ["rand"] }
 
 [features]
-full = ["image", "nalgebra"]
 buildtime-bindgen = ["apriltag-sys/buildtime-bindgen"]
 
 [package.metadata.docs.rs]
-features = ["full"]
 no-default-features = true
