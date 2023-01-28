@@ -155,8 +155,10 @@ fn main() -> Result<()> {
                 }
                 let lib_name = pthread_static_lib
                     .file_stem()
-                    .ok_or_else(|| anyhow!("Valid file"))?;
-                println!("cargo:rustc-link-lib={}", lib_name.display());
+                    .ok_or_else(|| anyhow!("file_stem() returns None"))?
+                    .to_str()
+                    .ok_or_else(|| anyhow!("to_str() returns None"))?;
+                println!("cargo:rustc-link-lib={}", lib_name);
 
                 // Currently, some shims require the function "gettimeofday" not available by default. Linking to winmm fix this issue.
                 if env::var_os("APRILTAG_SYS_WINDOWS_NO_WINMM").is_none() {
@@ -229,7 +231,7 @@ fn build_raw_static(sdk_path: PathBuf) -> Result<Vec<String>> {
     // On Microsoft Windows, apriltag requires an additional dependency as PTHREAD is not available by default.
     #[cfg(target_os = "windows")]
     {
-        match env::var_os("APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR").map(PathBuf::from(s)) {
+        match env::var_os("APRILTAG_SYS_WINDOWS_PTHREAD_INCLUDE_DIR").map(PathBuf::from) {
             Some(pthread_include_dir) if pthread_include_dir.is_dir() => {
                 compiler.include(pthread_include_dir);
             }
