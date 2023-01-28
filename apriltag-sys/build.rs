@@ -132,7 +132,7 @@ fn main() -> Result<()> {
         let bindgen_builder = bindgen_builder.clang_args(clang_args);
         let bindings = bindgen_builder
             .generate()
-            .map_err(|()| anyhow!("Unable to generate bindings"))?;
+            .context("Unable to generate bindings")?;
 
         let bindings_path = Path::new(MANIFEST_DIR).join("bindings").join("bindings.rs");
         fs::create_dir_all(bindings_path.parent().unwrap())?;
