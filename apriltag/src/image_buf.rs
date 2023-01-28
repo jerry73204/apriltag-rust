@@ -5,9 +5,14 @@
 //! or converted from third-party types.
 //! The supported third-party type conversions depend on the feature flags.
 
-use crate::common::*;
-
-const DEFAULT_ALIGNMENT_U8: usize = 96;
+use apriltag_sys as sys;
+use std::{
+    ffi::c_uint,
+    mem::ManuallyDrop,
+    ops::{Index, IndexMut},
+    ptr::NonNull,
+    slice,
+};
 
 /// The single-channel image with pixels in bytes.
 #[derive(Debug)]
@@ -174,6 +179,8 @@ mod nalgebra_conv {
         base::{dimension::Dim, storage::Storage},
         DMatrix, Matrix,
     };
+
+    const DEFAULT_ALIGNMENT_U8: usize = 96;
 
     impl From<&Image> for DMatrix<u8> {
         fn from(from: &Image) -> Self {

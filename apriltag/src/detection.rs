@@ -1,9 +1,15 @@
 //! Tag detection types.
 
 use crate::{
-    common::*,
     matd::MatdRef,
     pose::{Pose, PoseEstimation, TagParams},
+};
+use apriltag_sys as sys;
+use std::{
+    ffi::c_int,
+    fmt::{self, Debug, Formatter},
+    mem::{ManuallyDrop, MaybeUninit},
+    ptr::NonNull,
 };
 
 /// Represent a marker detection outcome.

@@ -1,7 +1,11 @@
 //! AprilTag detector type and its builder.
 
-use crate::{
-    common::*, detection::Detection, families::ApriltagFamily, image_buf::Image, zarray::ZArray,
+use crate::{detection::Detection, families::ApriltagFamily, image_buf::Image, zarray::ZArray};
+use apriltag_sys as sys;
+use std::{
+    ffi::c_int,
+    mem::{self, ManuallyDrop},
+    ptr::NonNull,
 };
 
 /// The detector builder that creates [Detector].

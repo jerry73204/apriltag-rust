@@ -4,7 +4,9 @@
 //! The images of pre-generated tags can be found at the official repositoy
 //! [https://github.com/AprilRobotics/apriltag-imgs](https://github.com/AprilRobotics/apriltag-imgs).
 
-use crate::{common::*, Error};
+use crate::error::Error;
+use apriltag_sys as sys;
+use std::{fmt::Debug, mem::ManuallyDrop, str::FromStr};
 
 pub trait ApriltagFamily
 where

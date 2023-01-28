@@ -8,7 +8,6 @@
 //! - **nalgebra**: Add conversions from/to two dimensional byte matrix in nalgebra crate.
 //! - **image**: Add conversions from/to image types in image crate.
 
-mod common;
 pub mod detection;
 pub mod detector;
 pub mod error;

@@ -1,6 +1,7 @@
 //! The matrix type.
 
-use crate::common::*;
+use apriltag_sys as sys;
+use std::fmt::{self, Debug, Formatter};
 
 /// The wrapper type of a matrix reference.
 pub struct MatdRef<'a> {

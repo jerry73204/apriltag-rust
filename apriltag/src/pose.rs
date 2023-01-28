@@ -1,6 +1,8 @@
 //! Pose types storing estimated rotation and translation parameters.
 
-use crate::{common::*, MatdRef};
+use crate::MatdRef;
+use apriltag_sys as sys;
+use std::fmt::{self, Debug, Formatter};
 
 /// Estimated pose along with error.
 pub struct PoseEstimation {

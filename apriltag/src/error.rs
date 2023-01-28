@@ -1,7 +1,5 @@
 //! Defines the error type for the crate.
 
-use crate::common::*;
-
 /// The error type for the crate.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum Error {

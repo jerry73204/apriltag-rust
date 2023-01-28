@@ -1,6 +1,15 @@
 //! The heap allocated array used by AprilTag library.
 
-use crate::common::*;
+use apriltag_sys as sys;
+use std::{
+    ffi::c_char,
+    marker::PhantomData,
+    mem::{self, ManuallyDrop},
+    ops::{Deref, DerefMut, Index, IndexMut},
+    os::raw::c_void,
+    ptr::NonNull,
+    slice,
+};
 
 /// A heap allocated array.
 #[derive(Debug)]
@@ -108,14 +117,10 @@ impl<T> Clone for ZArray<T> {
                 data: from_data,
             } = *from_ptr;
             assert!(size <= alloc);
-            assert_eq!(el_sz as usize, mem::size_of::<T>());
+            assert_eq!(el_sz, mem::size_of::<T>());
 
-            let to_data = libc::malloc(alloc as usize * el_sz as usize);
-            libc::memcpy(
-                to_data,
-                from_data as *mut c_void,
-                size as usize * el_sz as usize,
-            );
+            let to_data = libc::malloc(alloc as usize * el_sz);
+            libc::memcpy(to_data, from_data as *mut c_void, size as usize * el_sz);
 
             *to_ptr.as_mut().unwrap() = sys::zarray_t {
                 el_sz,
