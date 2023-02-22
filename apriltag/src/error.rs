@@ -11,4 +11,7 @@ pub enum Error {
 
     #[error("Unable to create a detector: {reason}")]
     CreateDetectorError { reason: String },
+
+    #[error("Invalid critical angle for detector: {val} degrees")]
+    CriticalAngleError { val: f32 },
 }

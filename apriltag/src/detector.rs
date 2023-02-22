@@ -8,7 +8,6 @@ use crate::{
     zarray::ZArray,
 };
 use apriltag_sys as sys;
-use measurements::angle::Angle;
 use noisy_float::prelude::R32;
 use std::{ffi::c_int, mem::ManuallyDrop, ptr::NonNull};
 
@@ -200,11 +199,7 @@ pub struct QuadThresholds {
 
     /// Reject quads where pairs of edges have angles that are close
     /// to a straight lines.
-    pub min_angle: Angle,
-
-    /// Reject quads where pairs of edges have angles that are close
-    /// to a 180 degrees.
-    pub min_opposite_angle: Angle,
+    pub cos_critical_rad: R32,
 
     /// Specify the maximal mean squared error when fittings lines to
     /// the contour. Useful for performance evaluation.
@@ -223,8 +218,7 @@ impl QuadThresholds {
         let Self {
             min_cluster_pixels,
             max_maxima_number,
-            min_angle,
-            min_opposite_angle,
+            cos_critical_rad,
             max_mse,
             min_white_black_diff,
             deglitch,
@@ -233,11 +227,64 @@ impl QuadThresholds {
         sys::apriltag_quad_thresh_params {
             min_cluster_pixels: min_cluster_pixels as c_int,
             max_nmaxima: max_maxima_number as c_int,
-            critical_rad: min_angle.as_radians() as f32,
-            cos_critical_rad: min_opposite_angle.as_radians() as f32,
+            critical_rad: f32::from(cos_critical_rad).acos(),
+            cos_critical_rad: f32::from(cos_critical_rad),
             max_line_fit_mse: max_mse.raw(),
             min_white_black_diff: min_white_black_diff as c_int,
             deglitch: deglitch as c_int,
         }
+    }
+
+    /// Set the critical angle for detection; the detector will reject
+    /// quads where pairs of edges have angles that are smaller than this.
+    /// This is mostly a convenience function to allow using angles
+    /// instead of the less intuitive cos values.
+    ///
+    /// Returns an Err if input is not within [0, 180]
+    #[must_use]
+    pub fn set_min_angle(&mut self, critical_angle_deg: f32) -> Result<(), Error> {
+        if critical_angle_deg > 180.0 || critical_angle_deg < 0.0 {
+            return Err(Error::CriticalAngleError {
+                val: (critical_angle_deg),
+            });
+        }
+        self.cos_critical_rad = R32::new(critical_angle_deg.to_radians().cos());
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+    use approx::assert_abs_diff_eq;
+
+    #[test]
+    fn min_angle() {
+        let mut thresholds = QuadThresholds {
+            min_cluster_pixels: 0,
+            max_maxima_number: 0,
+            cos_critical_rad: R32::new(0.0),
+            max_mse: R32::new(0.0),
+            min_white_black_diff: 0,
+            deglitch: false
+        };
+
+        let res = thresholds.set_min_angle(90.0);
+        assert!(res.is_ok());
+        assert_abs_diff_eq!(thresholds.cos_critical_rad.raw(), 0.0);
+
+        let res = thresholds.set_min_angle(0.0);
+        assert!(res.is_ok());
+        assert_eq!(thresholds.cos_critical_rad, 1.0);
+
+        // Invalid parameters should return Err and not change the value.
+
+        let res = thresholds.set_min_angle(-1.0);
+        assert!(res.is_err());
+        assert_eq!(thresholds.cos_critical_rad, 1.0);
+
+        let res = thresholds.set_min_angle(181.0);
+        assert!(res.is_err());
+        assert_eq!(thresholds.cos_critical_rad, 1.0);
     }
 }
