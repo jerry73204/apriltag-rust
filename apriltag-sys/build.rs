@@ -25,7 +25,7 @@ fn get_source_method() -> Result<SrcMethod> {
 
     let src = env::var_os("APRILTAG_SRC")
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("apriltag-src")); // git submodule checks this out
+        .unwrap_or_else(|| PathBuf::from(env!["CARGO_MANIFEST_DIR"]).join("apriltag-src")); // git submodule checks this out
 
     let value = match env::var("APRILTAG_SYS_METHOD") {
         Ok(value) => value,
