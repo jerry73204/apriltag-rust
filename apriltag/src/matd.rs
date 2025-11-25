@@ -8,9 +8,6 @@ pub struct MatdRef<'a> {
     pub(crate) ref_: &'a sys::matd_t,
 }
 
-unsafe impl Send for MatdRef<'_> {}
-unsafe impl Sync for MatdRef<'_> {}
-
 impl<'a> MatdRef<'a> {
     /// Get number of rows.
     pub fn nrows(&self) -> usize {
