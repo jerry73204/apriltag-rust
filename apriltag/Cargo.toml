@@ -12,7 +12,7 @@ readme = "README.md"
 license = "BSD-2-Clause"
 
 [dependencies]
-apriltag-sys = { version = "0.3.0", path = "../apriltag-sys" }
+apriltag-sys = { version = "0.4.0", path = "../apriltag-sys" }
 libc = "0.2.139"
 measurements = "0.11.0"
 noisy_float = "0.2.0"

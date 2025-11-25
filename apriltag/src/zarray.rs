@@ -28,7 +28,7 @@ impl<T> ZArray<T> {
         unsafe { self.ptr.as_ref().size as usize }
     }
 
-    pub fn iter(&self) -> ZArrayIter<T> {
+    pub fn iter(&self) -> ZArrayIter<'_, T> {
         ZArrayIter {
             zarray: self,
             len: self.len(),

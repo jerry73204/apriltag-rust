@@ -8,6 +8,9 @@ pub struct MatdRef<'a> {
     pub(crate) ref_: &'a sys::matd_t,
 }
 
+unsafe impl Send for MatdRef<'_> {}
+unsafe impl Sync for MatdRef<'_> {}
+
 impl<'a> MatdRef<'a> {
     /// Get number of rows.
     pub fn nrows(&self) -> usize {
@@ -24,7 +27,7 @@ impl<'a> MatdRef<'a> {
     /// The values are in row-major order.
     pub fn data(&self) -> &'a [f64] {
         let len = self.nrows() * self.ncols();
-        let data = unsafe { self.ref_.data.as_slice(len) };
+        let data = unsafe { std::slice::from_raw_parts(self.ref_.data,len) };
         data
     }
 

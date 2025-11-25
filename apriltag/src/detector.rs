@@ -133,7 +133,7 @@ impl Detector {
     /// Both very computationally inexpensive and generally recommended to be enabled. The option is ignored if decimation is disabled.
     pub fn set_refine_edges(&mut self, refine_edges: bool) {
         unsafe {
-            self.ptr.as_mut().refine_edges = refine_edges as c_int;
+            self.ptr.as_mut().refine_edges = refine_edges;
         }
     }
 
@@ -152,7 +152,7 @@ impl Detector {
     /// It is disabled by default.
     pub fn set_debug(&mut self, debug: bool) {
         unsafe {
-            self.ptr.as_mut().debug = debug as c_int;
+            self.ptr.as_mut().debug = debug;
         }
     }
 
